@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/base}">
+
+<body>
+    <main th:fragment="content">
+        <style>
+            .checkout-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                display: flex;
+                gap: 2rem;
+            }
+
+            .order-summary {
+                background: #FFFFFF;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .order-summary h3 {
+                font-size: 1.5rem;
+                color: var(--text-dark);
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 2px solid var(--border);
+            }
+
+            .product-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 0;
+                border-bottom: 1px solid var(--border);
+                transition: all 0.3s ease;
+            }
+
+            .product-item:hover {
+                background: rgba(241, 245, 249, 0.5);
+            }
+
+            .product-item span:first-child {
+                flex: 2;
+                color: var(--text-dark);
+                font-weight: 500;
+            }
+
+            .product-item span:nth-child(2) {
+                flex: 1;
+                text-align: center;
+                color: var(--text-light);
+            }
+
+            .product-item span:last-child {
+                flex: 1;
+                text-align: right;
+                color: var(--text-dark);
+                font-weight: 500;
+            }
+
+            .order-item {
+                display: flex;
+                justify-content: space-between;
+                padding: 1rem 0;
+                margin: 1rem 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .order-item span:first-child {
+                color: var(--text-light);
+            }
+
+            .order-item span:last-child {
+                color: var(--success);
+                font-weight: 600;
+            }
+
+            .total-price {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: var(--primary);
+                text-align: right;
+                padding: 1rem 0;
+                margin-top: 1rem;
+                border-top: 2px solid var(--primary);
+            }
+
+            @media (max-width: 768px) {
+                .product-item {
+                    flex-wrap: wrap;
+                    gap: 0.5rem;
+                }
+
+                .product-item span {
+                    flex: 1 1 100%;
+                    text-align: left !important;
+                }
+
+                .product-item span:nth-child(2) {
+                    order: 3;
+                    color: var(--text-dark);
+                }
+
+                .total-price {
+                    font-size: 1.1rem;
+                }
+            }
+        </style>
+        <div class="checkout-container">
+            <!-- Форма оплаты -->
+            <form class="payment-form" id="payment-form">
+                <h2 class="form-title">Оплата заказа</h2>
+
+                <div class="form-group">
+                    <label class="form-label">Имя владельца карты</label>
+                    <input type="text" class="form-input" th:value="${user.surname} + ' ' + ${user.name}" id="cardName"
+                        required>
+                    <div class="error-message-name error">Введите имя владельца карты</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Номер карты</label>
+                    <div class="card-input-group">
+                        <input type="text" class="form-input" id="cardNumber" placeholder="4242 4242 4242 4242"
+                            required>
+                        <div class="card-icons">
+                            <i class="card-icon" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label class="form-label">Срок действия</label>
+                        <input type="text" class="form-input" id="expiryDate" placeholder="MM/ГГ" required>
+                        <div class="error-message-date error">Неверная дата</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CVV</label>
+                        <input type="text" class="form-input" id="cardCvv" placeholder="123" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Адрес доставки</label>
+                    <input type="text" class="form-input" th:value="${user.address}" id="address" required>
+                    <div class="error-message-address">Введите адрес доставки</div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="saveData">
+                    <label for="saveData">Сохранить данные для следующих покупок</label>
+                </div>
+
+                <button type="submit" class="pay-button" id="payButton">Оплатить сейчас</button>
+            </form>
+
+            <div class="order-summary">
+                <h3>Ваш заказ</h3>
+
+                <div th:each="item : ${order.items}">
+                    <div class="product-item">
+                        <span th:text="${item.product.name}"></span>
+                        <span th:text="${item.quantity} + ' шт.'"></span>
+                        <span
+                            th:text="${#numbers.formatDecimal(item.product.price, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></span>
+                    </div>
+                </div>
+
+                <div class="order-item">
+                    <span>Доставка</span>
+                    <span>Бесплатно</span>
+                </div>
+
+                <div class="total-price"
+                    th:text="${'Итого: ' + #numbers.formatDecimal(totalAmount, 0, 'COMMA', 2, 'POINT') + ' ₸'}"></div>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const errorDate = document.querySelector('.error-message-date');
+                const errorName = document.querySelector('.error-message-name');
+                const errorAddress = document.querySelector('.error-message-address');
+                const cardIcon = document.querySelector('.card-icon');
+
+                errorDate.style.display = 'none';
+                errorName.style.display = 'none';
+                errorAddress.style.display = 'none';
+
+                if (localStorage.getItem('cardNumber')) {
+                    document.getElementById('cardName').value = localStorage.getItem('cardName');
+                    document.getElementById('cardNumber').value = localStorage.getItem('cardNumber');
+                    document.getElementById('expiryDate').value = localStorage.getItem('expiryDate');
+                    document.getElementById('cardCvv').value = localStorage.getItem('cardCvv');
+                    document.getElementById('saveData').checked = localStorage.getItem('saveData');
+                }
+
+                document.getElementById('cardNumber').addEventListener('input', function (e) {
+                    let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+                    let formatted = value.match(/.{1,4}/g);
+                    e.target.value = formatted ? formatted.join(' ') : '';
+                    if (e.target.value.length >= 20) {
+                        e.target.value = e.target.value.slice(0, 19);
+                    }
+                    if (e.target.value.startsWith("4")) {
+                        cardIcon.className = 'fab fa-cc-visa card-icon';
+                    } else if (e.target.value.startsWith("5")) {
+                        cardIcon.className = 'fab fa-cc-mastercard card-icon';
+                    } else {
+                        cardIcon.className = 'fab fa-cc-discover card-icon';
+                    }
+                });
+
+                document.getElementById('expiryDate').addEventListener('input', function (e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 2) {
+                        let month = value.slice(0, 2);
+                        let year = value.slice(2, 4);
+                        if (month > 12) {
+                            month = 12;
+                        }
+                        if (year < new Date().getFullYear().toString().slice(-2) || year > (new Date().getFullYear() + 10).toString().slice(-2)) {
+                            errorDate.style.display = 'block';
+                        } else if (year === new Date().getFullYear().toString().slice(-2) && month <= new Date().getMonth() + 1) {
+                            errorDate.style.display = 'block';
+                        } else {
+                            errorDate.style.display = 'none';
+                        }
+                        value = month + '/' + year;
+                    }
+                    e.target.value = value;
+                });
+
+                document.getElementById('cardCvv').addEventListener('input', function (e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 3) {
+                        value = value.slice(0, 3);
+                    }
+                    e.target.value = value;
+                });
+
+                document.getElementById('payment-form').addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    let name = document.getElementById('cardName').value;
+                    let address = document.getElementById('address').value;
+                    let cardNumber = document.getElementById('cardNumber').value;
+                    let expiryDate = document.getElementById('expiryDate').value;
+                    let cardCvv = document.getElementById('cardCvv').value;
+
+                    if (document.getElementById('saveData').checked) {
+                        localStorage.setItem('cardName', name);
+                        localStorage.setItem('cardNumber', cardNumber);
+                        localStorage.setItem('expiryDate', expiryDate);
+                        localStorage.setItem('cardCvv', cardCvv);
+                        localStorage.setItem('saveData', document.getElementById('saveData').checked);
+                    }
+
+                    alert('Заказ успешно оформлен!');
+                });
+            });
+        </script>
+    </main>
+</body>
+
+</html>

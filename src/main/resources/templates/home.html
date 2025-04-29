@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Главная страница</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+
+<body>
+    <div th:replace="~{fragments/header :: header('home')}"></div>
+
+    <section class="banner">
+        <div class="banner-content">
+            <h1>Новая коллекция 2024</h1>
+            <button class="btn btn-primary">Смотреть каталог</button>
+        </div>
+    </section>
+</body>
+</html>

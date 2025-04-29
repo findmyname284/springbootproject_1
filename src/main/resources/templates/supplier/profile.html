@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="edit">
+    <section class="supplier-profile">
+        <div class="section-header">
+            <h2><i class="fas fa-user-tie"></i> Профиль поставщика</h2>
+        </div>
+        <div th:object="${supplier}" class="supplier-details">
+            <div class="detail-item">
+                <label>Название:</label>
+                <span th:text="*{name}"></span>
+            </div>
+            <div class="detail-item">
+                <label>Адрес:</label>
+                <span th:text="*{address}"></span>
+            </div>
+            <div class="detail-item">
+                <label>Телефон:</label>
+                <span th:text="*{phone}"></span>
+            </div>
+            <div class="detail-item">
+                <label>Email:</label>
+                <span th:text="*{email}"></span>
+            </div>
+            <div class="detail-item">
+                <label>Дата регистрации:</label>
+                <span th:text="${#dates.format(*{registrationDate}, 'dd.MM.yyyy')}"></span>
+            </div>
+        </div>
+        <button class="btn-edit"><i class="fas fa-edit"></i> Редактировать</button>
+    </section>
+</div>
+
+<div th:fragment="products">
+    <style>
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .drop-zone.dragover {
+            border-color: #2962FF;
+            background: rgba(41, 98, 255, 0.05);
+        }
+
+        .drop-content {
+            color: #666;
+        }
+
+        .drop-content i {
+            font-size: 3rem;
+            color: #2962FF;
+            margin-bottom: 1rem;
+        }
+
+        .preview {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .preview>*:nth-child(3)~* {
+            display: none;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <section class="supplier-products">
+        <div class="section-header">
+            <h2><i class="fas fa-box-open"></i> Продукты</h2>
+        </div>
+        <div>
+            <button class="btn-add-product toggle-btn"><i class="fas fa-plus"></i> Добавить продукт</button>
+            <div class="product-list">
+                <ul th:each="product : ${supplierProducts}">
+                    <li class="product-card" th:object="${product}">
+                        <div class="product-image-wrapper">
+                            <img class="product-image" th:if="${product.image != ''}" th:src="@{${product.image}}"
+                                alt="Product Image">
+                            <img class="product-image" th:src="@{/img/no-image.png}" alt="Product Image">
+                            <div class="product-actions">
+                                <button class="action-btn edit-btn" th:attr="data-id=${product.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete-btn" th:attr="data-id=${product.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="product-details">
+                            <h3 class="product-title" th:text="${product.name}"></h3>
+                            <div class="product-meta">
+                                <span class="product-price" th:text="${'$' + product.price}"></span>
+                                <span class="product-stock" th:text="${'Stock: ' + product.stock}"></span>
+                            </div>
+                            <p class="product-category" th:text="${product.category}"></p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-overlay">
+                <div class="modal">
+                    <span class="close-btn">&times;</span>
+                    <h2>Добавить продукт</h2>
+                    <form class="add-product-form" id="productForm">
+
+                        <div class="form-group" style="margin-bottom: 0 !important;">
+                            <label for="productName">Добавить фото:</label>
+                            <button type="button" class="btn-add-photo"
+                                style="border: none; background: #2962FF; outline: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; color: white;"
+                                onclick="">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <div class="preview" id="preview"></div>
+                        </div>
+
+                        <div class="modal-overlay upload-container">
+                            <div class="modal">
+                                <span class="close-btn">&times;</span>
+                                <div class="drop-zone" id="dropZone">
+                                    <div class="drop-content">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <p>Перетащите файлы сюда или кликните для выбора</p>
+                                    </div>
+                                    <input type="file" id="fileInput" hidden>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="productName">Название продукта:</label>
+                            <input type="text" id="productName" name="productName" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productDescription">Описание:</label>
+                            <textarea id="productDescription" name="productDescription" class="form-input"
+                                required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="productPrice">Цена:</label>
+                            <input type="number" id="productPrice" name="productPrice" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productBarcode">Штрих-код:</label>
+                            <input type="text" id="productBarcode" name="productBarcode" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategory">Категория:</label>
+                            <input type="text" id="productCategory" name="productCategory" class="form-input" required>
+                            <!-- <select id="productCategory" name="productCategory" required>
+                                <option value="" disabled selected>Выберите категорию</option>
+                                <option th:each="category : ${categories}" th:value="${category}" th:text="${category}">
+                                </option>
+                            </select> -->
+                        </div>
+                        <button type="submit" class="btn-submit">Добавить</button>
+                    </form>
+                </div>
+            </div>
+            <div th:replace="supplier/profile :: productEdit"></div>
+            <script>
+                let photoUrl = null;
+
+                const dropZone = document.getElementById('dropZone');
+                const fileInput = document.getElementById('fileInput');
+                const preview = document.getElementById('preview');
+
+                dropZone.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', handleFiles);
+
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('dragover');
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('dragover');
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length) handleFiles({ target: { files } });
+                });
+
+                async function handleFiles(e) {
+                    const files = e.target.files;
+                    for (const file of files) {
+                        if (!file.type.startsWith('image/')) {
+                            alert('Пожалуйста, выбирайте только изображения');
+                            continue;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = document.createElement('img');
+                            img.className = 'preview-image';
+                            img.src = e.target.result;
+                            img.maxWidth = 100;
+                            img.maxHeight = 100;
+                            preview.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+
+                        try {
+                            const formData = new FormData();
+                            formData.append('file', file);
+
+                            const response = await fetch('/api/products/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            const data = await response.json();
+                            if (!response.ok) throw new Error(data.error);
+
+                            console.log('File uploaded:', data.url);
+                            photoUrl = data.url;
+                        } catch (error) {
+                            console.error('Upload error:', error);
+                            alert('Ошибка загрузки: ' + error.message);
+                        }
+                    }
+                }
+
+                document.getElementById('productForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const formData = {
+                        name: document.getElementById('productName').value,
+                        description: document.getElementById('productDescription').value,
+                        price: parseFloat(document.getElementById('productPrice').value),
+                        barcode: document.getElementById('productBarcode').value,
+                        category: document.getElementById('productCategory').value,
+                        image: photoUrl
+                    };
+
+                    try {
+                        const response = await fetch('/api/products', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(formData)
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Ошибка при сохранении');
+                        }
+
+                        alert('Продукт успешно добавлен!');
+                        document.getElementById('productForm').reset();
+
+                    } catch (error) {
+                        console.error('Ошибка:', error);
+                        alert(`Ошибка: ${error.message}`);
+                    }
+                });
+            </script>
+            <script>
+                const openModalBtn = document.querySelector('.btn-add-product');
+                const btnAddPhoto = document.querySelector('.btn-add-photo');
+                const modalOverlays = document.querySelectorAll('.modal-overlay');
+                const closeBtns = document.querySelectorAll('.close-btn');
+                const modalOverlay = modalOverlays[0];
+                const closeBtn = closeBtns[0];
+
+                openModalBtn.addEventListener('click', () => {
+                    modalOverlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+
+                btnAddPhoto.addEventListener('click', () => {
+                    modalOverlays[1].classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+
+                for (let i = 0; i < closeBtns.length; i++) {
+                    closeBtns[i].addEventListener('click', () => {
+                        modalOverlays[i].classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                }
+
+                for (let i = 0; i < modalOverlays.length; i++) {
+                    modalOverlays[i].addEventListener('click', (e) => {
+                        if (e.target === modalOverlays[i]) {
+                            modalOverlays[i].classList.remove('active');
+                            document.body.style.overflow = '';
+                        }
+                    });
+                }
+
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        modalOverlays.forEach(overlay => {
+                            overlay.classList.remove('active');
+                            document.body.style.overflow = '';
+                        });
+                    }
+                });
+            </script>
+    </section>
+</div>
+
+<div th:fragment="productEdit">
+    <div class="modal-overlay">
+        <div class="modal">
+            <span class="close-btn">&times;</span>
+            <h2>Добавить продукт</h2>
+        </div>
+    </div>
+
+    <script>
+        const editBtns = document.querySelectorAll('.edit-btn');
+
+        editBtns.forEach(element => {
+            element.addEventListener('click', () => {
+                let id = element.
+                modalOverlays[2].classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+    </script>
+</div>
+
+</html>
