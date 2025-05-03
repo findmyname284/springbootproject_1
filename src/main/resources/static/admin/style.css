@@ -1,0 +1,78 @@
+.admin-container {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+    background: #f5f6fa;
+}
+
+.admin-sidebar {
+    background: #2c3e50;
+    padding: 1.5rem;
+    position: fixed;
+    height: 100%;
+    width: 240px;
+}
+
+.admin-main {
+    padding: 2rem;
+}
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.user-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.user-card h3 {
+    margin: 0 0 0.5rem;
+    color: #2c3e50;
+}
+
+.user-card p {
+    margin: 0.3rem 0;
+    color: #7f8c8d;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 450px;
+    position: relative;
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-icon.danger {
+    color: #ff5252;
+}
+
+.btn-icon:hover {
+    background: #2c3e50;
+}
+
+.btn-icon.danger:hover {
+    background: rgba(255, 82, 82, 0.5);
+}

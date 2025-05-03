@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/base}">
+
+<body>
+    <main th:fragment="content">
+        <div class="returns-container">
+            <h1>My Returns</h1>
+
+            <div th:if="${returns == null or returns.size() == 0}" class="no-returns">
+                <p>No return requests found</p>
+            </div>
+
+            <div th:each="return : ${returns}" class="return-card">
+                <div class="return-product-info">
+                    <img th:src="${return.items[0].product.baseProduct.image}" alt="Product image" class="product-image">
+                    <div>
+                        <h3 th:text="${return.items[0].product.baseProduct.name}"></h3>
+                        <p>Order #[[${return.id}]]</p>
+                    </div>
+                </div>
+
+                <div class="return-meta">
+                    <div class="return-status" th:classappend="'status-' + ${return.status.name().toLowerCase()}">
+                        [[${return.status}]]
+                    </div>
+                    <a th:href="@{/returns/{id}(id=${return.id})}" class="view-details">View Details →</a>
+                </div>
+            </div>
+        </div>
+        <style>
+            .returns-container {
+                max-width: 1200px;
+                margin: 2rem auto;
+                padding: 2rem;
+            }
+
+            .return-card {
+                background: white;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                transition: transform 0.2s;
+            }
+
+            .return-card:hover {
+                transform: translateY(-3px);
+            }
+
+            .return-status {
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-weight: 500;
+            }
+
+            .status-pending {
+                background: #ffd700;
+                color: #000;
+            }
+
+            .status-approved {
+                background: #4CAF50;
+                color: white;
+            }
+
+            .status-rejected {
+                background: #f44336;
+                color: white;
+            }
+
+            .status-processing {
+                background: #2196F3;
+                color: white;
+            }
+
+            .return-product-info {
+                display: flex;
+                align-items: center;
+                gap: 1.5rem;
+            }
+
+            .product-image {
+                width: 60px;
+                height: 60px;
+                object-fit: cover;
+                border-radius: 8px;
+            }
+
+            .no-returns {
+                text-align: center;
+                padding: 3rem;
+                color: #666;
+            }
+        </style>
+    </main>
+</body>
+
+</html>

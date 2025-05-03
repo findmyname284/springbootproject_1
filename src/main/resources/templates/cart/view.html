@@ -10,15 +10,15 @@
             </div>
 
             <div class="summary">
-                <div class="promo-section">
+                <!-- <div class="promo-section">
                     <input type="text" class="promo-input" placeholder="Введите промокод">
                     <button class="btn btn-primary">Применить</button>
-                </div>
+                </div> -->
 
                 <div class="total-price">Итого: 0 KZT</div>
                 <button class="checkout-btn">Перейти к оплате</button>
             </div>
-            <script>
+            <script th:inline="javascript">
                 document.addEventListener('DOMContentLoaded', () => {
                     const cartItemsJson = JSON.parse(localStorage.getItem('cartJson')) || [];
                     const cartItemsContainer = document.querySelector('.cart-items');
@@ -32,10 +32,11 @@
                                 if (product) {
                                     cartItems.push({
                                         id: product.id,
-                                        name: product.name,
-                                        image: product.image,
-                                        price: product.price,
-                                        stock: product.stock,
+                                        name: product.baseProduct.name,
+                                        image: product.baseProduct.image,
+                                        price: product.price * (1 - product.discount / 100),
+                                        stock: product.quantity,
+                                        discount: product.discount,
                                         quantity: cartItemsJson.find(i => i.id == product.id)?.quantity || 1
                                     });
                                 }
@@ -104,32 +105,32 @@
                             });
                         });
 
-                        document.querySelector('.btn-primary').addEventListener('click', () => {
-                            const promoCodeInput = document.querySelector('.promo-input');
-                            if (!promoCodeInput.value) {
-                                promoCodeInput.style = 'border-color: red';
-                                return;
-                            }
-                            fetch('/api/cart/promo', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ promoCode: promoCodeInput.value })
-                            })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        promoCodeInput.style = 'border-color: green';
-                                    } else {
-                                        promoCodeInput.style = 'border-color: red';
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error applying promo code:', error);
-                                    alert('Ошибка применения промокода');
-                                });
-                        });
+                        // document.querySelector('.btn-primary').addEventListener('click', () => {
+                        //     const promoCodeInput = document.querySelector('.promo-input');
+                        //     if (!promoCodeInput.value) {
+                        //         promoCodeInput.style = 'border-color: red';
+                        //         return;
+                        //     }
+                        //     fetch('/api/cart/promo', {
+                        //         method: 'POST',
+                        //         headers: {
+                        //             'Content-Type': 'application/json'
+                        //         },
+                        //         body: JSON.stringify({ promoCode: promoCodeInput.value })
+                        //     })
+                        //         .then(response => response.json())
+                        //         .then(data => {
+                        //             if (data.success) {
+                        //                 promoCodeInput.style = 'border-color: green';
+                        //             } else {
+                        //                 promoCodeInput.style = 'border-color: red';
+                        //             }
+                        //         })
+                        //         .catch(error => {
+                        //             console.error('Error applying promo code:', error);
+                        //             alert('Ошибка применения промокода');
+                        //         });
+                        // });
 
                         document.querySelector('.checkout-btn').addEventListener('click', () => {
                             fetch('/api/cart/checkout', {
@@ -142,7 +143,8 @@
                                 .then(response => response.json())
                                 .then(data => {
                                     if (data.id) {
-                                        showNotification("Заказ успешно оформлен");
+                                        localStorage.setItem('cartJson', '[]');
+                                        localStorage.setItem('cart', '[]');
                                         window.location.href = '/cart/checkout?orderId=' + data.id;
                                     } else {
                                         alert(data.error);

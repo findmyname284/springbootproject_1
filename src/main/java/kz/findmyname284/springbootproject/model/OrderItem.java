@@ -1,37 +1,55 @@
 package kz.findmyname284.springbootproject.model;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "order_items")
-@IdClass(OrderItemId.class)
 public class OrderItem {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @Id
     @ManyToOne
     @JoinColumn(name = "product_id")
-    private Product product;
+    private CatalogProduct product;
+
+    @Column(precision = 10, scale = 2, nullable = false)
+    private BigDecimal price;
+
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id")
+    private Warehouse warehouse;
 
     @Column(nullable = false)
-    private Integer quantity;
+    private Long quantity;
 
-    public OrderItem() {
+    public Long getId() {
+        return id;
     }
 
-    public OrderItem(Order order, Product product, Integer quantity) {
-        this.order = order;
-        this.product = product;
-        this.quantity = quantity;
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Warehouse getWarehouse() {
+        return warehouse;
+    }
+
+    public void setWarehouse(Warehouse warehouse) {
+        this.warehouse = warehouse;
     }
 
     public Order getOrder() {
@@ -42,19 +60,27 @@ public class OrderItem {
         this.order = order;
     }
 
-    public Product getProduct() {
+    public CatalogProduct getProduct() {
         return product;
     }
 
-    public void setProduct(Product product) {
+    public void setProduct(CatalogProduct product) {
         this.product = product;
     }
 
-    public Integer getQuantity() {
+    public Long getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(Long quantity) {
         this.quantity = quantity;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 }

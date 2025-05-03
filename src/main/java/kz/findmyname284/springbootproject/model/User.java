@@ -42,7 +42,7 @@ public class User {
     private String address;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal money = BigDecimal.ZERO;
+    private BigDecimal balance = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'USER'")
@@ -120,11 +120,11 @@ public class User {
         this.role = role;
     }
 
-    public BigDecimal getMoney() {
-        return money;
+    public BigDecimal getBalance() {
+        return balance;
     }
 
-    public void setMoney(BigDecimal money) {
-        this.money = money;
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
     }
 }

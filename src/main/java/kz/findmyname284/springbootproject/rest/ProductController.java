@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,76 +17,82 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import kz.findmyname284.springbootproject.dto.ProductDTO;
+import kz.findmyname284.springbootproject.dto.WarehouseProductDTO;
 import kz.findmyname284.springbootproject.enums.UserRole;
-import kz.findmyname284.springbootproject.model.Product;
-import kz.findmyname284.springbootproject.model.Supplier;
+import kz.findmyname284.springbootproject.exception.AuthorizationException;
+import kz.findmyname284.springbootproject.model.CatalogProduct;
+import kz.findmyname284.springbootproject.model.Employee;
 import kz.findmyname284.springbootproject.model.User;
-import kz.findmyname284.springbootproject.service.ProductService;
-import kz.findmyname284.springbootproject.service.SupplierService;
+import kz.findmyname284.springbootproject.model.Warehouse;
+import kz.findmyname284.springbootproject.model.WarehouseProduct;
+import kz.findmyname284.springbootproject.repository.CatalogProductRepository;
+import kz.findmyname284.springbootproject.repository.WarehouseProductRepository;
+import kz.findmyname284.springbootproject.service.EmployeeService;
 import kz.findmyname284.springbootproject.service.UserService;
+import kz.findmyname284.springbootproject.service.WarehouseService;
+import kz.findmyname284.springbootproject.utils.Authorization;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
-    private final ProductService productService;
-    private final SupplierService supplierService;
+    private final WarehouseProductRepository wProductRepository;
+    private final CatalogProductRepository cProductRepository;
+    private final EmployeeService employeeService;
     private final UserService userService;
+    private final WarehouseService warehouseService;
 
     private final String UPLOAD_DIR = "./uploads/";
 
     @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody ProductDTO productDto,
+    public ResponseEntity<?> createProduct(@RequestBody WarehouseProductDTO productDto,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            if (userDetails == null) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Unauthorized"));
-            }
-            Optional<User> userOptional = userService.findByUsername(userDetails.getUsername());
+            User user = Authorization.getAuthorizationUser(userService, userDetails);
 
-            if (!userOptional.isPresent()) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Unauthorized"));
-            }
+            Authorization.checkRole(user, UserRole.MANAGER, UserRole.ADMIN, UserRole.EMPLOYEE);
 
-            User user = userOptional.get();
+            Optional<Employee> employee = employeeService.findByUser(user);
 
-            if (user.getRole() != UserRole.SUPPLIER) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Collections.singletonMap("error", "Supplier not found"));
-            }
+            Warehouse warehouse = null;
 
-            Supplier supplier = supplierService.findByUser(user);
+            if (!employee.isPresent()) {
+                Authorization.checkRole(user, UserRole.ADMIN, UserRole.MANAGER);
+                warehouse = warehouseService.findById(productDto.warehouseId());
+            } else {
+                warehouse = warehouseService.findByEmployee(employee.get());
 
-            if (supplier == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Collections.singletonMap("error", "Supplier not found"));
             }
 
-            Product product = new Product();
+            if (warehouse == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "Warehouse not found"));
+            }
+
+            WarehouseProduct product = new WarehouseProduct();
             product.setName(productDto.name());
             product.setDescription(productDto.description());
-            product.setPrice(productDto.price());
-            product.setBarcode(productDto.barcode());
-            product.setCategory(productDto.category());
-            product.setImage(productDto.image() == null ? "" : productDto.image());
-            product.setCreated(java.time.LocalDateTime.now());
-            product.setSupplier(supplier);
+            product.setSku(productDto.sku());
+            product.setImage(productDto.image() == null ? "/img/no-image.png" : productDto.image());
+            product.setQuantity(productDto.quantity());
+            product.setWarehouse(warehouse);
+            product.setCreated(LocalDateTime.now());
 
-            productService.newProduct(product);
+            wProductRepository.save(product);
 
             return ResponseEntity.status(HttpStatus.CREATED).build();
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                    Map.of("message", "Ошибка создания продукта: " + e.getMessage()));
+                    Map.of("error", "Ошибка создания продукта: " + e.getMessage()));
         }
     }
 
@@ -114,13 +121,70 @@ public class ProductController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<Product>> getProducts() {
-        return ResponseEntity.ok(productService.findAll());
+    public ResponseEntity<List<CatalogProduct>> getProducts() {
+        return ResponseEntity.ok(cProductRepository.findAll());
     }
 
     @GetMapping("/get")
-    public ResponseEntity<Product> getMethodName(@RequestParam(name = "id", required = false) Long id) {
-        return ResponseEntity.ok(productService.findById(id));
+    public ResponseEntity<?> getMethodName(@RequestParam(name = "id", required = true) Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            User user = Authorization.getAuthorizationUser(userService, userDetails);
+
+            Authorization.checkRole(user, UserRole.MANAGER, UserRole.ADMIN, UserRole.EMPLOYEE);
+
+            WarehouseProduct product = wProductRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Product not found: " + id));
+
+            return ResponseEntity.ok().body(product);
+        } catch (AuthorizationException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "Not found"));
+        }
     }
-    
+
+    @PutMapping
+    public ResponseEntity<?> updateProduct(@RequestBody WarehouseProductDTO productDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            User user = Authorization.getAuthorizationUser(userService, userDetails);
+
+            Authorization.checkRole(user, UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.ADMIN);
+
+            Optional<WarehouseProduct> productOptional = wProductRepository.findById(productDto.id());
+
+            if (productOptional.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            WarehouseProduct savedProduct = productOptional.get();
+            savedProduct.setName(productDto.name());
+            savedProduct.setDescription(productDto.description());
+            savedProduct.setSku(productDto.sku());
+            savedProduct.setImage(productDto.image() == null ? "/img/no-image.png" : productDto.image());
+            savedProduct.setQuantity(productDto.quantity());
+            try {
+                Authorization.checkRole(user, UserRole.MANAGER, UserRole.ADMIN);
+                Warehouse warehouse = warehouseService.findById(productDto.warehouseId());
+                if (warehouse == null) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(Collections.singletonMap("error", "Warehouse not found"));
+                }
+                savedProduct.setBasePrice(productDto.basePrice());
+                savedProduct.setWarehouse(warehouse);
+            } catch (AuthorizationException e) {
+                // ignore
+            }
+
+            wProductRepository.save(savedProduct);
+
+            return ResponseEntity.ok().body(Collections.singletonMap("success", "Product updated"));
+        } catch (AuthorizationException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
 }

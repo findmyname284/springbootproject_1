@@ -108,52 +108,16 @@
             }
         </style>
         <div class="checkout-container">
-            <!-- Форма оплаты -->
             <form class="payment-form" id="payment-form">
                 <h2 class="form-title">Оплата заказа</h2>
 
-                <div class="form-group">
-                    <label class="form-label">Имя владельца карты</label>
-                    <input type="text" class="form-input" th:value="${user.surname} + ' ' + ${user.name}" id="cardName"
-                        required>
-                    <div class="error-message-name error">Введите имя владельца карты</div>
+                <div class="toggle-container">
+                    <button class="toggle-btn active" data-form="balance">Из баланса</button>
+                    <button class="toggle-btn" data-form="card">С картой</button>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Номер карты</label>
-                    <div class="card-input-group">
-                        <input type="text" class="form-input" id="cardNumber" placeholder="4242 4242 4242 4242"
-                            required>
-                        <div class="card-icons">
-                            <i class="card-icon" aria-hidden="true"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="form-group">
-                        <label class="form-label">Срок действия</label>
-                        <input type="text" class="form-input" id="expiryDate" placeholder="MM/ГГ" required>
-                        <div class="error-message-date error">Неверная дата</div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">CVV</label>
-                        <input type="text" class="form-input" id="cardCvv" placeholder="123" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Адрес доставки</label>
-                    <input type="text" class="form-input" th:value="${user.address}" id="address" required>
-                    <div class="error-message-address">Введите адрес доставки</div>
-                </div>
-
-                <div class="checkbox-group">
-                    <input type="checkbox" id="saveData">
-                    <label for="saveData">Сохранить данные для следующих покупок</label>
-                </div>
-
-                <button type="submit" class="pay-button" id="payButton">Оплатить сейчас</button>
+                <div th:replace="cart/fragments :: payment-form"></div>
+                <div th:replace="cart/fragments :: payment-balance"></div>
             </form>
 
             <div class="order-summary">
@@ -161,10 +125,10 @@
 
                 <div th:each="item : ${order.items}">
                     <div class="product-item">
-                        <span th:text="${item.product.name}"></span>
+                        <span th:text="${item.product.baseProduct.name}"></span>
                         <span th:text="${item.quantity} + ' шт.'"></span>
                         <span
-                            th:text="${#numbers.formatDecimal(item.product.price, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></span>
+                            th:text="${#numbers.formatDecimal(item.price * (1 - item.product.discount / 100), 0, 'COMMA', 2, 'POINT')} + ' ₸'"></span>
                     </div>
                 </div>
 
@@ -177,12 +141,28 @@
                     th:text="${'Итого: ' + #numbers.formatDecimal(totalAmount, 0, 'COMMA', 2, 'POINT') + ' ₸'}"></div>
             </div>
         </div>
-        <script>
+        <script th:inline="javascript">
             document.addEventListener('DOMContentLoaded', () => {
+                const balance = '[[${user.balance}]]';
+                const tolalAmount = '[[${totalAmount}]]';
+                const urlParams = new URLSearchParams(window.location.search);
+                const orderId = urlParams.get('orderId');
                 const errorDate = document.querySelector('.error-message-date');
                 const errorName = document.querySelector('.error-message-name');
                 const errorAddress = document.querySelector('.error-message-address');
                 const cardIcon = document.querySelector('.card-icon');
+
+                const toggleBtn = document.querySelectorAll('.toggle-btn');
+                const forms = document.querySelectorAll('.payment-form');
+
+                toggleBtn.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        toggleBtn.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        document.getElementById(`payment-card`).classList.toggle('none');
+                        document.getElementById(`payment-balance`).classList.toggle('none');
+                    });
+                });
 
                 errorDate.style.display = 'none';
                 errorName.style.display = 'none';
@@ -257,7 +237,40 @@
                         localStorage.setItem('saveData', document.getElementById('saveData').checked);
                     }
 
-                    alert('Заказ успешно оформлен!');
+                    if (balance < tolalAmount) {
+                        document.querySelector(".pay-balance-button").disabled = true;
+                    }
+
+                    document.querySelector(".pay-card-button").addEventListener('click', () => {
+                        API.post("/api/payments", {
+                            id: orderId,
+                            name: name,
+                            address: address,
+                            cardNumber: cardNumber,
+                            expiryDate: expiryDate,
+                            cardCvv: cardCvv
+                        }).then(data => {
+                            if (data.id)
+                                window.location.href = `/cart/checkout/status/${data.id}`;
+                            else if (data.error) {
+                                notification.className = 'error';
+                                showNotification(data.error);
+                            }
+                        });
+                    });
+
+                    document.querySelector(".pay-balance-button").addEventListener('click', () => {
+                        API.post("/api/payments/balance", { id: orderId }).then(data => {
+                            if (data.error) {
+                                notification.className = 'error';
+                                showNotification(data.error);
+                                return;
+                            } else if (data.id) {
+
+                                window.location.href = `/cart/checkout/status/${data.id}`;
+                            }
+                        });
+                    });
                 });
             });
         </script>

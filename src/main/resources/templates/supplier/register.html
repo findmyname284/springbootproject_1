@@ -44,8 +44,10 @@
                             responseMessage.textContent = data.error;
                             responseMessage.className = 'error';
                         } else if (data.success) {
-                            responseMessage.textContent = data.error;
+                            responseMessage.textContent = data.success;
                             responseMessage.className = 'success';
+                            window.location.href = '/dashboard';
+                            window.location.reload();
                         }
                     }).catch(error => {
                         console.error(error);

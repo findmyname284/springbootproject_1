@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <div th:fragment="nav">
+        <a href="#employees" id="employees-nav" class="nav-item">
+            <i class="fas fa-users"></i> Сотрудники
+        </a>
+        <a href="#warehouses" id="warehouses-nav" class="nav-item">
+            <i class="fa-solid fa-warehouse"></i> Склады
+        </a>
+        <a href="#warehouse-products" id="warehouse-products-nav" class="nav-item">
+            <i class="fa-solid fa-boxes-stacked"></i> Товары на складе
+        </a>
+
+    </div>
+    <section th:fragment="employees" class="employees-section none" th:id="employees">
+        <div class="section-header">
+            <h2><i class="fas fa-users-cog"></i> Сотрудники</h2>
+            <button onclick="Modal.open('employee-modal')" class="btn-add toggle-btn">
+                <i class="fas fa-plus"></i> Добавить сотрудника
+            </button>
+        </div>
+
+        <div id="employees-list" class="card-grid"></div>
+
+        <div class="modal-overlay" id="employee-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('employee-modal')">&times;</span>
+                <h2>Новый сотрудник</h2>
+                <form id="employee-form" class="modal-form">
+                    <div class="form-group">
+                        <label>Пользователь</label>
+                        <select id="employee-user-select" name="userId" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Оклад</label>
+                        <input type="number" name="salary" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ИИН</label>
+                        <input type="text" name="iin" class="form-control" pattern="\d{12}" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary btn-cancel btn-submit"
+                            onclick="Modal.close('employee-modal')">Отмена</button>
+                        <button type="submit" class="btn-primary btn-submit">Создать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="employee-edit-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('employee-edit-modal')">&times;</span>
+                <h2>Редактирование сотрудника</h2>
+                <form id="employee-edit-form" class="modal-form">
+                    <input type="hidden" name="id">
+                    <div class="form-group">
+                        <label>Оклад</label>
+                        <input type="number" name="salary" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ИИН</label>
+                        <input type="text" name="iin" class="form-control" pattern="\d{12}" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary btn-cancel btn-submit"
+                            onclick="Modal.close('employee-edit-modal')">Отмена</button>
+                        <button type="submit" class="btn-primary btn-submit">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section th:fragment="warehouses" class="warehouses-section none" th:id="warehouses">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> Склады</h2>
+        </div>
+        <button onclick="Modal.open('warehouse-modal')" class="btn-add-warehouse toggle-btn">
+            <i class="fas fa-plus"></i>Добавить склад</button>
+
+        <div id="warehouses-list" class="card-grid">
+
+        </div>
+        <div class="modal-overlay" id="warehouse-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('warehouse-modal')">&times;</span>
+                <h2>Добавить склад</h2>
+                <form id="warehouse-form" class="modal-form">
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Адрес</label>
+                        <input type="text" class="form-control" name="address" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="Modal.close('warehouse-modal')"
+                            class="btn-secondary btn-cancel btn-submit">Отмена</button>
+                        <button type="submit" class="btn-primary btn-submit">Добавить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-overlay" id="warehouse-edit-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('warehouse-edit-modal')">&times;</span>
+                <h2>Редактирование склад</h2>
+                <form id="warehouse-form-edit" class="modal-form">
+                    <input type="text" class="none" name="id">
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Адрес</label>
+                        <input type="text" class="form-control" name="address" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Сотрудник</label>
+                        <select name="employee-id" class="employee-select form-control"></select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="Modal.close('warehouse-edit-modal')"
+                            class="btn-secondary btn-cancel btn-submit">Отмена</button>
+                        <button type="submit" class="btn-primary btn-submit">Добавить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section th:fragment="warehouse-products" class="warehouse-products-section none" th:id="warehouse-products">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> Склады</h2>
+        </div>
+        <button onclick="Modal.open('warehouse-modal')" class="btn-add-warehouse toggle-btn">
+            <i class="fas fa-plus"></i>Добавить склад</button>
+
+        <div id="warehouses-list" class="card-grid">
+
+        </div>
+        <div class="modal-overlay" id="warehouse-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('warehouse-modal')">&times;</span>
+                <h2>Добавить склад</h2>
+                <form id="warehouse-form" class="modal-form">
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Адрес</label>
+                        <input type="text" class="form-control" name="address" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Товар</label>
+                        <select name="productId" class="product-select form-control"></select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="Modal.close('warehouse-modal')"
+                            class="btn-secondary btn-cancel btn-submit">Отмена</button>
+                        <button type="submit" class="btn-primary btn-submit">Добавить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-overlay" id="warehouse-edit-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('warehouse-edit-modal')">&times;</span>
+                <h2>Редактирование склад</h2>
+                <form id="warehouse-form-edit" class="modal-form">
+                    <input type="text" class="none" name="id">
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Адрес</label>
+                        <input type="text" class="form-control" name="address" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Товар</label>
+                        <select name="productId" class="product-select form-control"></select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="Modal.close('warehouse-edit-modal')"
+                            class="btn-secondary btn-cancel btn-submit">Отмена</button>
+                        <button type="submit" class="btn-primary btn-submit">Добавить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

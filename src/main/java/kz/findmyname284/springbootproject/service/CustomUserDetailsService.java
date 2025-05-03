@@ -1,7 +1,6 @@
 package kz.findmyname284.springbootproject.service;
 
 import java.util.Collections;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,12 +18,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        if (userOptional.isEmpty()) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
             throw new UsernameNotFoundException("User Not Found with username: " + username);
         }
 
-        User user = userOptional.get();
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),

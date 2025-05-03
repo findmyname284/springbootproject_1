@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/base}">
+
+<body>
+    <main th:fragment="content">
+        <div class="return-details">
+            <div class="return-header">
+                <h1>Return Request #[[${return.id}]]</h1>
+                <div class="return-status" th:classappend="'status-' + ${return.status.name().toLowerCase()}">
+                    [[${return.status}]]
+                </div>
+            </div>
+
+            <div class="timeline">
+                <button type="submit" class="btn btn-primary" id="send">Send Return Request</button>
+            </div>
+
+            <div class="product-grid">
+                <div th:each="item : ${return.items}" class="product-card">
+                    <img th:src="${item.product.baseProduct.image}" alt="Product image" class="product-image">
+                    <div>
+                        <h4 th:text="${item.product.baseProduct.name}"></h4>
+                        <p>Quantity: [[${item.quantity}]]</p>
+                        <p>Price: $[[${#numbers.formatDecimal(item.price, 1, 2)}]]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <style>
+            .return-details {
+                max-width: 800px;
+                margin: 2rem auto;
+                padding: 2rem;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .timeline {
+                margin: 2rem 0;
+                padding-left: 1.5rem;
+                border-left: 2px solid #eee;
+            }
+
+            .timeline-item {
+                position: relative;
+                margin-bottom: 2rem;
+                padding-left: 2rem;
+            }
+
+            .timeline-marker {
+                position: absolute;
+                left: -9px;
+                top: 0;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: #ddd;
+            }
+
+            .timeline-item.active .timeline-marker {
+                background: #4CAF50;
+                box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+            }
+
+            .product-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1.5rem;
+                margin: 2rem 0;
+            }
+
+            .product-card {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                padding: 1rem;
+                border: 1px solid #eee;
+                border-radius: 8px;
+            }
+        </style>
+        <script th:inline="javascript">
+            const sendBtn = document.getElementById("send");
+            const returnId = '[[${return.id}]]';
+            console.log('Return ID:', returnId);
+
+            sendBtn.addEventListener('click', () => {
+                API.post("/api/cart/cancel/" + returnId).then(data => {
+                    if (data.error) {
+                        notification.className = 'error';
+                        showNotification(data.error);
+                        return;
+                    } else if (data.success) {
+                        notification.className = 'success';
+                        showNotification(data.success);
+                        window.location.reload();
+                    }
+                });
+            });
+        </script>
+    </main>
+</body>
+
+</html>

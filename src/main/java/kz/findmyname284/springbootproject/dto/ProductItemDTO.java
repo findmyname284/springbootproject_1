@@ -4,5 +4,5 @@ import jakarta.validation.constraints.NotBlank;
 
 public record ProductItemDTO(
         @NotBlank Long id,
-        @NotBlank Integer quantity) {
+        @NotBlank Long quantity) {
 }

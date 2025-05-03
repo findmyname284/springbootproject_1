@@ -32,313 +32,476 @@
 </div>
 
 <div th:fragment="products">
-    <style>
-        .drop-zone {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .drop-zone.dragover {
-            border-color: #2962FF;
-            background: rgba(41, 98, 255, 0.05);
-        }
-
-        .drop-content {
-            color: #666;
-        }
-
-        .drop-content i {
-            font-size: 3rem;
-            color: #2962FF;
-            margin-bottom: 1rem;
-        }
-
-        .preview {
-            margin-top: 1rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 1rem;
-        }
-
-        .preview>*:nth-child(3)~* {
-            display: none;
-        }
-
-        .preview-image {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
-    </style>
     <section class="supplier-products">
         <div class="section-header">
             <h2><i class="fas fa-box-open"></i> Продукты</h2>
         </div>
         <div>
-            <button class="btn-add-product toggle-btn"><i class="fas fa-plus"></i> Добавить продукт</button>
+            <button class="btn-add-product toggle-btn" onclick="Modal.open('product-modal')"><i class="fas fa-plus"></i>
+                Купить продукт</button>
             <div class="product-list">
-                <ul th:each="product : ${supplierProducts}">
+                <ul th:if="supplierProducts != null" th:each="product : ${supplierProducts}">
                     <li class="product-card" th:object="${product}">
                         <div class="product-image-wrapper">
-                            <img class="product-image" th:if="${product.image != ''}" th:src="@{${product.image}}"
-                                alt="Product Image">
-                            <img class="product-image" th:src="@{/img/no-image.png}" alt="Product Image">
+                            <div class="product-badges" th:if="${product.discount > 0}">
+                                <span class="badge new" th:text="${product.discount + '%'}"></span>
+                            </div>
+                            <img class="product-image" th:if="${product.baseProduct.image != ''}"
+                                th:src="@{${product.baseProduct.image}}" alt="Product Image">
                             <div class="product-actions">
-                                <button class="action-btn edit-btn" th:attr="data-id=${product.id}">
+                                <button class="action-btn edit-btn" th:onclick="'editProduct(' + ${product.id} + ')'"
+                                    th:attr="data-id=${product.id}">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="action-btn delete-btn" th:attr="data-id=${product.id}">
-                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="product-details">
-                            <h3 class="product-title" th:text="${product.name}"></h3>
+                            <h3 class="product-title" th:text="${product.baseProduct.name}"></h3>
                             <div class="product-meta">
-                                <span class="product-price" th:text="${'$' + product.price}"></span>
-                                <span class="product-stock" th:text="${'Stock: ' + product.stock}"></span>
+                                <span class="product-price"
+                                    th:text="${product.price != null ? #numbers.formatDecimal((product.price / 100) * (100 - product.discount), 0, 'COMMA', 2, 'POINT') + ' ₸' : 'нет цены'}"></span>
+                                <div th:if="${product.discount > 0}">
+                                    <span class="product-discount"
+                                        th:text="${'Скидка: ' + product.discount + '%'}"></span>
+                                    <p class="old-price"
+                                        th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT') + ' ₸'}">
+                                    </p>
+                                </div>
+                                <span class="product-stock" th:text="${'Stock: ' + product.quantity}"></span>
                             </div>
-                            <p class="product-category" th:text="${product.category}"></p>
                         </div>
                     </li>
                 </ul>
+                <ul th:if="${supplierProducts == null or supplierProducts.empty}">
+                    <h3 class="product-title">No products</h3>
+                </ul>
+                <div th:replace="supplier/profile :: productEdit"></div>
             </div>
-            <div class="modal-overlay">
-                <div class="modal">
-                    <span class="close-btn">&times;</span>
-                    <h2>Добавить продукт</h2>
-                    <form class="add-product-form" id="productForm">
+            <div class="modal-overlay" id="product-modal">
+                <div class="modal" style="max-width: unset;">
+                    <span class="close-btn" onclick="Modal.close('product-modal')">&times;</span>
+                    <h2>Купить продукт</h2>
 
-                        <div class="form-group" style="margin-bottom: 0 !important;">
-                            <label for="productName">Добавить фото:</label>
-                            <button type="button" class="btn-add-photo"
-                                style="border: none; background: #2962FF; outline: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; color: white;"
-                                onclick="">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <div class="preview" id="preview"></div>
-                        </div>
+                    <div class="products-grid">
+                        <div th:if="${products != null and !products.empty}" class="products-container">
+                            <div th:each="product : ${products}" class="product-card">
 
-                        <div class="modal-overlay upload-container">
-                            <div class="modal">
-                                <span class="close-btn">&times;</span>
-                                <div class="drop-zone" id="dropZone">
-                                    <div class="drop-content">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                        <p>Перетащите файлы сюда или кликните для выбора</p>
+                                <div class="product-image-wrapper">
+                                    <div class="product-badges" th:if="${product.created != null}">
+                                        <span class="badge new"
+                                            th:if="${product.created != null and T(java.time.temporal.ChronoUnit).DAYS.between(product.created.toLocalDate(), T(java.time.LocalDate).now()) < 7}">
+                                            NEW
+                                        </span>
                                     </div>
-                                    <input type="file" id="fileInput" hidden>
+                                    <img class="product-image"
+                                        th:src="${product.image != null and !product.image.isEmpty()} ? @{${product.image}} : @{/img/no-image.png}"
+                                        alt="Product image" loading="lazy">
+                                </div>
+
+                                <div class="product-details">
+                                    <h3 class="product-title" th:text="${product.name}"></h3>
+
+                                    <div class="description-wrapper" th:if="${product.description}">
+                                        <div class="product-description" th:text="${product.description}"></div>
+                                        <i class="fas fa-info-circle description-icon"></i>
+                                    </div>
+
+                                    <div class="product-meta">
+                                        <div class="price-block">
+                                            <span class="current-price"
+                                                th:text="${product.basePrice == null ? 'нет цены' : #numbers.formatDecimal(product.basePrice, 0, 'COMMA', 2, 'POINT') + ' ₸'}">
+                                            </span>
+                                        </div>
+
+                                        <div class="stock-info">
+                                            <i class="fas fa-box-open"></i>
+                                            <span
+                                                th:text="${product.quantity != null ? product.quantity : 0} + ' шт.'"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="quantity-control">
+                                        <label>Количество:</label>
+                                        <div class="quantity-buttons">
+                                            <button class="quantity-minus" aria-label="Уменьшить количество">−</button>
+                                            <span class="quantity-value">1</span>
+                                            <button class="quantity-plus" aria-label="Увеличить количество">+</button>
+                                            <input type="number" th:attr="data-id=${product.id}" class="quantity-input"
+                                                name="count" min="1" th:max="${product.quantity}" value="1" hidden>
+                                        </div>
+                                    </div>
+
+                                    <button class="btn btn-buy" th:attr="data-id=${product.id}"
+                                        th:onclick="'buyProduct('+${product.id}+')'">
+                                        <i class="fas fa-shopping-cart"></i>
+                                        Купить
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="productName">Название продукта:</label>
-                            <input type="text" id="productName" name="productName" class="form-input" required>
+
+                        <div th:if="${products == null or products.empty}" class="empty-state">
+                            <i class="fas fa-box-open"></i>
+                            <p>Товары не найдены</p>
                         </div>
-                        <div class="form-group">
-                            <label for="productDescription">Описание:</label>
-                            <textarea id="productDescription" name="productDescription" class="form-input"
-                                required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="productPrice">Цена:</label>
-                            <input type="number" id="productPrice" name="productPrice" class="form-input" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="productBarcode">Штрих-код:</label>
-                            <input type="text" id="productBarcode" name="productBarcode" class="form-input" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="productCategory">Категория:</label>
-                            <input type="text" id="productCategory" name="productCategory" class="form-input" required>
-                            <!-- <select id="productCategory" name="productCategory" required>
-                                <option value="" disabled selected>Выберите категорию</option>
-                                <option th:each="category : ${categories}" th:value="${category}" th:text="${category}">
-                                </option>
-                            </select> -->
-                        </div>
-                        <button type="submit" class="btn-submit">Добавить</button>
-                    </form>
+                    </div>
                 </div>
             </div>
-            <div th:replace="supplier/profile :: productEdit"></div>
+
             <script>
-                let photoUrl = null;
+                const modalOverlays = document.querySelectorAll('.modal-overlay');
 
-                const dropZone = document.getElementById('dropZone');
-                const fileInput = document.getElementById('fileInput');
-                const preview = document.getElementById('preview');
+                document.querySelectorAll('.quantity-control').forEach(control => {
+                    const minus = control.querySelector('.quantity-minus');
+                    const plus = control.querySelector('.quantity-plus');
+                    const value = control.querySelector('.quantity-value');
+                    const input = control.querySelector('.quantity-input');
+                    const max = parseInt(input.max) || Infinity;
 
-                dropZone.addEventListener('click', () => fileInput.click());
-                fileInput.addEventListener('change', handleFiles);
-
-                dropZone.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    dropZone.classList.add('dragover');
-                });
-
-                dropZone.addEventListener('dragleave', () => {
-                    dropZone.classList.remove('dragover');
-                });
-
-                dropZone.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    dropZone.classList.remove('dragover');
-                    const files = e.dataTransfer.files;
-                    if (files.length) handleFiles({ target: { files } });
-                });
-
-                async function handleFiles(e) {
-                    const files = e.target.files;
-                    for (const file of files) {
-                        if (!file.type.startsWith('image/')) {
-                            alert('Пожалуйста, выбирайте только изображения');
-                            continue;
-                        }
-
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const img = document.createElement('img');
-                            img.className = 'preview-image';
-                            img.src = e.target.result;
-                            img.maxWidth = 100;
-                            img.maxHeight = 100;
-                            preview.appendChild(img);
-                        };
-                        reader.readAsDataURL(file);
-
-                        try {
-                            const formData = new FormData();
-                            formData.append('file', file);
-
-                            const response = await fetch('/api/products/upload', {
-                                method: 'POST',
-                                body: formData
-                            });
-
-                            const data = await response.json();
-                            if (!response.ok) throw new Error(data.error);
-
-                            console.log('File uploaded:', data.url);
-                            photoUrl = data.url;
-                        } catch (error) {
-                            console.error('Upload error:', error);
-                            alert('Ошибка загрузки: ' + error.message);
-                        }
-                    }
-                }
-
-                document.getElementById('productForm').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-
-                    const formData = {
-                        name: document.getElementById('productName').value,
-                        description: document.getElementById('productDescription').value,
-                        price: parseFloat(document.getElementById('productPrice').value),
-                        barcode: document.getElementById('productBarcode').value,
-                        category: document.getElementById('productCategory').value,
-                        image: photoUrl
+                    const updateValue = (newVal) => {
+                        newVal = Math.max(1, Math.min(max, newVal));
+                        value.textContent = newVal;
+                        input.value = newVal;
+                        minus.disabled = newVal <= 1;
+                        plus.disabled = newVal >= max;
                     };
 
-                    try {
-                        const response = await fetch('/api/products', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(formData)
-                        });
+                    minus.addEventListener('click', () => updateValue(parseInt(value.textContent) - 1));
+                    plus.addEventListener('click', () => updateValue(parseInt(value.textContent) + 1));
 
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || 'Ошибка при сохранении');
+                    updateValue(parseInt(input.value));
+                });
+
+                const buyProduct = (id) => {
+                    const count = document.querySelector(`input[data-id="${id}"]`).value;
+                    API.post(`/api/supplier/buy/${id}`, {
+                        value: parseInt(count)
+                    }).then(data => {
+                        if (data.error) {
+                            notification.className = 'error';
+                            showNotification(data.error);
+                            return;
                         }
-
-                        alert('Продукт успешно добавлен!');
-                        document.getElementById('productForm').reset();
-
-                    } catch (error) {
-                        console.error('Ошибка:', error);
-                        alert(`Ошибка: ${error.message}`);
-                    }
-                });
-            </script>
-            <script>
-                const openModalBtn = document.querySelector('.btn-add-product');
-                const btnAddPhoto = document.querySelector('.btn-add-photo');
-                const modalOverlays = document.querySelectorAll('.modal-overlay');
-                const closeBtns = document.querySelectorAll('.close-btn');
-                const modalOverlay = modalOverlays[0];
-                const closeBtn = closeBtns[0];
-
-                openModalBtn.addEventListener('click', () => {
-                    modalOverlay.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                });
-
-                btnAddPhoto.addEventListener('click', () => {
-                    modalOverlays[1].classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                });
-
-                for (let i = 0; i < closeBtns.length; i++) {
-                    closeBtns[i].addEventListener('click', () => {
-                        modalOverlays[i].classList.remove('active');
-                        document.body.style.overflow = '';
+                        notification.className = 'success';
+                        showNotification(data.success);
                     });
                 }
 
-                for (let i = 0; i < modalOverlays.length; i++) {
-                    modalOverlays[i].addEventListener('click', (e) => {
-                        if (e.target === modalOverlays[i]) {
-                            modalOverlays[i].classList.remove('active');
-                            document.body.style.overflow = '';
+                const editProduct = (id) => {
+                    Modal.open(`product-edit-modal`);
+
+                    API.get(`/api/supplier/get/${id}`).then(data => {
+                        if (data.error) {
+                            notification.className = 'error';
+                            showNotification(data.error);
+                            return;
                         }
-                    });
+                        const form = document.getElementById("productEditForm");
+                        form.querySelector('input[name="id"]').value = data.id || '';
+                        form.querySelector('input[name="price"]').value = data.price || '';
+                        form.querySelector('input[name="discount"]').value = data.discount || '';
+                    })
+
+
+
                 }
 
+                modalOverlays.forEach((overlay) => {
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('modal-overlay')) {
+                            Modal.close(overlay.id);
+                        }
+                    });
+                });
 
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {
-                        modalOverlays.forEach(overlay => {
-                            overlay.classList.remove('active');
-                            document.body.style.overflow = '';
-                        });
+                        modalOverlays.forEach(item => {
+                            Modal.close(item.id);
+                        })
                     }
                 });
             </script>
+
+            <style>
+                .quantity-control {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin: 0.5rem 0;
+                }
+
+                .quantity-buttons {
+                    display: inline-flex;
+                    align-items: center;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    overflow: hidden;
+                }
+
+                .quantity-minus,
+                .quantity-plus {
+                    width: 32px;
+                    height: 32px;
+                    border: none;
+                    background: #f8f9fa;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    font-size: 1.2rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .quantity-minus:hover,
+                .quantity-plus:hover {
+                    background: #e9ecef;
+                }
+
+                .quantity-minus:active,
+                .quantity-plus:active {
+                    transform: scale(0.95);
+                }
+
+                .quantity-value {
+                    width: 40px;
+                    text-align: center;
+                    font-weight: 500;
+                    user-select: none;
+                }
+
+                .products-grid {
+                    padding: 1.5rem;
+                }
+
+                .products-container {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                    gap: 1.5rem;
+                }
+
+                .product-card {
+                    background: white;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+
+                .product-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+                }
+
+                .product-image-wrapper {
+                    position: relative;
+                    background: #f8f9fa;
+                }
+
+                .product-image {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                    padding: 1rem;
+                }
+
+                .product-badge {
+                    position: absolute;
+                    top: 0.5rem;
+                    right: 0.5rem;
+                    background: #dc3545;
+                    color: white;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 4px;
+                    font-size: 0.9rem;
+                }
+
+                .description-wrapper {
+                    position: relative;
+                    margin: 0.5rem 0;
+                }
+
+                .description-icon {
+                    color: #007bff;
+                    font-size: 1rem;
+                    cursor: help;
+                    transition: opacity 0.2s;
+                }
+
+                .product-description {
+                    position: absolute;
+                    bottom: 100%;
+                    left: 0;
+                    width: 100%;
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 1rem;
+                    border-radius: 6px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    opacity: 0;
+                    transform: translateY(10px);
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    pointer-events: none;
+                    z-index: 1;
+                }
+
+                .description-wrapper:hover .product-description {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+
+                @media (hover: none) {
+                    .product-description {
+                        position: static;
+                        opacity: 1;
+                        box-shadow: none;
+                        background: transparent;
+                        padding: 0.5rem 0;
+                        transform: none;
+                    }
+                }
+
+                .product-details {
+                    padding: 1rem;
+                }
+
+                .product-title {
+                    margin: 0 0 0.75rem;
+                    font-size: 1.1rem;
+                    color: #333;
+                    height: 3rem;
+                    overflow: hidden;
+                    display: -webkit-box;
+                    line-clamp: 2;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                }
+
+                .product-meta {
+                    margin-bottom: 1rem;
+                }
+
+                .price-block {
+                    display: flex;
+                    gap: 0.75rem;
+                    align-items: center;
+                    margin-bottom: 0.5rem;
+                }
+
+                .current-price {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    color: #2a2a2a;
+                }
+
+                .original-price {
+                    font-size: 0.9rem;
+                    color: #6c757d;
+                    text-decoration: line-through;
+                }
+
+                .stock-info {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    color: #28a745;
+                    font-size: 0.9rem;
+                }
+
+                .btn-buy {
+                    width: 100%;
+                    background: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                }
+
+                .btn-buy:hover {
+                    background: #0056b3;
+                }
+
+                .empty-state {
+                    text-align: center;
+                    padding: 3rem;
+                    color: #6c757d;
+                }
+
+                .empty-state i {
+                    font-size: 3rem;
+                    margin-bottom: 1rem;
+                }
+
+                @media (max-width: 480px) {
+                    .products-container {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            </style>
+        </div>
     </section>
 </div>
 
 <div th:fragment="productEdit">
-    <div class="modal-overlay">
+    <div class="modal-overlay" id="product-edit-modal">
         <div class="modal">
-            <span class="close-btn">&times;</span>
-            <h2>Добавить продукт</h2>
+            <span class="close-btn" onclick="Modal.close('product-edit-modal')">&times;</span>
+            <h2>Редактировать продукт</h2>
+
+            <form class="edit-product-form" id="productEditForm">
+                <input type="hidden" name="id">
+                <div class="form-group">
+                    <label for="price">Цена</label>
+                    <input type="number" id="price" name="price" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="discount">Скидка:</label>
+                    <input type="number" id="discount" name="discount" class="form-control" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary btn-submit">Сохранить</button>
+                    <button type="button" class="btn-secondary btn-cancel btn-submit"
+                        onclick="Modal.close('product-edit-modal')">Отмена</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        const editBtns = document.querySelectorAll('.edit-btn');
+        document.getElementById('productEditForm').addEventListener('submit', (e) => {
+            e.preventDefault();
 
-        editBtns.forEach(element => {
-            element.addEventListener('click', () => {
-                let id = element.
-                modalOverlays[2].classList.add('active');
-                document.body.style.overflow = 'hidden';
+            const formData = new FormData(e.target);
+            const id = formData.get('id');
+            const price = formData.get('price');
+            const discount = formData.get('discount');
+
+            if (!id || !price || !discount) {
+                notification.className = 'error';
+                showNotification('Заполните все поля' + id + ' ' + price + ' ' + discount);
+                return;
+            }
+
+            API.put(`api/supplier/edit/${id}`, {
+                price: parseInt(price),
+                discount: parseInt(discount)
+            }).then(data => {
+                if (data.error) {
+                    notification.className = 'error';
+                    showNotification(data.error);
+                    return;
+                }
+                notification.className = 'success';
+                showNotification(data.success);
+                window.location.reload();
             });
-        });
-
+        })
     </script>
 </div>
 

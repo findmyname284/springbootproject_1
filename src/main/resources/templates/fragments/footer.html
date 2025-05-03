@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
     <footer th:fragment="footer" class="footer">
         <div class="footer-content">
@@ -10,30 +11,37 @@
                     <li><a href="/contacts">Контакты</a></li>
                 </ul>
             </div>
-            
+
             <div class="footer-section">
                 <h4>Помощь</h4>
                 <ul>
-                    <li><a href="/delivery">Доставка</a></li>
                     <li><a href="/returns">Возврат</a></li>
                 </ul>
             </div>
-            
+
             <div class="footer-section social">
                 <h4>Мы в соцсетях</h4>
                 <div class="social-links">
                     <a href="#">
-                        <!-- <img src="/icons/vk.svg" alt="VK"> -->
                         <i class="fa-brands fa-vk"></i>
                     </a>
-                    <a href="#"><i class="fa-brands fa-telegram"></i></a>
+                    <a href="#">
+                        <i class="fa-brands fa-telegram"></i>
+                    </a>
+                    <a target="_blank" href="https://intagram.com/find_my_name_0">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
                 </div>
             </div>
         </div>
-        
+
         <div class="footer-bottom">
-            <p>© 2025 BrandShop. Все права защищены</p>
+            <p>©
+                <span th:text="${@environment.getProperty('company.foundation-year')}">2025</span>
+                <span th:text="${@environment.getProperty('company.name')}"></span>. Все права защищены
+            </p>
         </div>
     </footer>
 </body>
+
 </html>

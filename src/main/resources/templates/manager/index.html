@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/base}">
+
+<body>
+    <main th:fragment="content">
+        <link rel="stylesheet" th:href="@{/admin/style.css}">
+        <div class="dashboard">
+            <aside class="sidebar">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <span class="user-avatar"></span>
+                    </div>
+
+                    <h3 class="user-name"></h3>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <div th:include="manager/fragments :: nav"></div>
+                </nav>
+            </aside>
+
+            <main class="main-content">
+                <section th:replace="manager/fragments :: employees"></section>
+
+                <section th:replace="manager/fragments :: warehouses"></section>
+
+                <section th:replace="manager/fragments :: warehouse_products"></section>
+            </main>
+        </div>
+        <script th:src="@{/manager/manager.js}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const userAvatar = document.querySelector('.user-avatar');
+                const userName = document.querySelector('.user-name');
+                const usersNav = document.querySelector('#users-nav');
+                const warehousesNav = document.querySelector('#warehouses-nav');
+                const usersList = document.querySelector('#users-list');
+                const warehousesList = document.querySelector('#warehouses-list');
+                const usersSection = document.querySelector('#users');
+                const warehousesSection = document.querySelector('#warehouses');
+                const modalOverlays = document.querySelectorAll('.modal-overlay');
+
+                let currentPanel = null;
+                let userData = ManagerPanel.getCurrentUserInfo();
+
+                userData.then((data) => {
+                    userAvatar.textContent = data.surname.substring(0, 1) + data.name.substring(0, 1);
+                    userName.textContent = data.surname + ' ' + data.name;
+                });
+
+                const navItems = {
+                    '#employees': () => {
+                        currentPanel = new ManagerPanel();
+                        document.querySelector('#employees').classList.remove('none');
+                    },
+                    '#warehouses': () => {
+                        currentPanel = new ManagerPanel();
+                        document.querySelector('#warehouses').classList.remove('none');
+                    }
+                };
+
+                modalOverlays.forEach((overlay) => {
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('modal-overlay')) {
+                            Modal.close(overlay.id);
+                        }
+                    });
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        modalOverlays.forEach(item => {
+                            Modal.close(item.id);
+                        })
+                    }
+                });
+
+                document.getElementById('warehouse-form').addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    ManagerPanel.addWarehouse();
+                });
+
+                document.getElementById('warehouse-form-edit').addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    ManagerPanel.editWarehouse();
+                });
+
+                document.getElementById('employee-form').addEventListener('submit', e => {
+                    e.preventDefault();
+                    ManagerPanel.handleEmployeeCreate(e);
+                });
+
+                document.getElementById('employee-edit-form').addEventListener('submit', e => {
+                    e.preventDefault();
+                    ManagerPanel.handleEmployeeUpdate(e);
+                });
+
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        const hash = this.getAttribute('href');
+                        window.location.hash = hash;
+
+                        // Скрыть все секции
+                        document.querySelectorAll('section').forEach(section => {
+                            section.classList.add('none');
+                        });
+
+                        // Показать активную секцию
+                        document.querySelector(hash).classList.remove('none');
+
+                        // Инициализация соответствующей панели
+                        if (navItems[hash]) navItems[hash]();
+                    });
+                });
+
+                const initialHash = window.location.hash || '#users';
+                if (navItems[initialHash]) navItems[initialHash]();
+                function updateActiveState() {
+                    const hash = window.location.hash.substring(1) || 'users';
+
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+
+                    const activeNavItem = document.querySelector(`a[href="#${hash}"]`);
+                    if (activeNavItem) {
+                        activeNavItem.click();
+                        activeNavItem.classList.add('active');
+                    }
+                }
+
+                updateActiveState();
+
+                window.addEventListener('hashchange', updateActiveState);
+            });
+        </script>
+    </main>
+</body>
+
+</html>

@@ -1,18 +1,153 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Главная страница</title>
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" th:replace="~{fragments/base}">
 
 <body>
-    <div th:replace="~{fragments/header :: header('home')}"></div>
+    <main th:fragment="content">
+        <section class="hero-section">
+            <div class="hero-content">
+                <div th:if="${user != null}">
+                    <h1 class="hero-title">Добро пожаловать,<br><span th:text="${user.surname + ' ' + user.name}"></span>!</h1>
+                    <div class="stats-card">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" th:text="${#numbers.formatDecimal(user.balance, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></div>
+                                <div class="stat-label">Ваш баланс</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" th:text="${orders}">12</div>
+                                <div class="stat-label">Активные заказы</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <section class="banner">
-        <div class="banner-content">
-            <h1>Новая коллекция 2024</h1>
-            <button class="btn btn-primary">Смотреть каталог</button>
-        </div>
-    </section>
+                <div th:if="${user == null}">
+                    <h1 class="hero-title">Лучшие товары<br>по лучшим ценам</h1>
+                    <div class="hero-actions">
+                        <a href="/auth" class="hero-button primary">Войти в аккаунт</a>
+                        <a href="/auth#register" class="hero-button secondary">Регистрация</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <style>
+            :root {
+                --primary: #6366f1;
+                --primary-hover: #4f46e5;
+                --background: #f8fafc;
+                --text-dark: #1e293b;
+                --text-light: #64748b;
+                --border: #e2e8f0;
+                --discount: #ef4444;
+                --success: #22c55e;
+                --warning: #eab308;
+            }
+
+            .hero-section {
+                position: relative;
+                height: 400px;
+                background: linear-gradient(45deg, #6366f155, var(--primary-color));
+                display: flex;
+                align-items: center;
+                padding: 0 5%;
+                margin-bottom: 4rem;
+                overflow: hidden;
+            }
+
+            .hero-content {
+                max-width: 600px;
+                position: relative;
+                z-index: 2;
+            }
+
+            .hero-title {
+                font-size: 3.5rem;
+                color: white;
+                margin-bottom: 1.5rem;
+                line-height: 1.2;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .hero-actions {
+                display: flex;
+                gap: 1rem;
+                margin-top: 2rem;
+            }
+
+            .hero-button {
+                padding: 1rem 2rem;
+                border-radius: 50px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                text-decoration: none;
+            }
+
+            .hero-button.primary {
+                background: white;
+                color: var(--primary);
+            }
+
+            .hero-button.secondary {
+                background: transparent;
+                color: white;
+                border: 2px solid white;
+            }
+
+            .stats-card {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 2rem;
+                border-radius: 16px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                backdrop-filter: blur(10px);
+                margin-top: 2rem;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 2rem;
+            }
+
+            .stat-item {
+                text-align: center;
+            }
+
+            .stat-value {
+                font-size: 2.0rem;
+                font-weight: 700;
+                color: var(--primary);
+                margin-bottom: 0.5rem;
+            }
+
+            .stat-label {
+                color: var(--text-light);
+                text-transform: uppercase;
+                font-size: 0.9rem;
+            }
+
+            /* Анимации */
+            @keyframes float {
+
+                0%,
+                100% {
+                    transform: translateY(0);
+                }
+
+                50% {
+                    transform: translateY(-20px);
+                }
+            }
+
+            .hero-illustration {
+                position: absolute;
+                right: 5%;
+                bottom: 0;
+                width: 400px;
+                animation: float 6s ease-in-out infinite;
+            }
+        </style>
+    </main>
 </body>
+
 </html>

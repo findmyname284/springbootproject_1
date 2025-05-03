@@ -1,15 +1,24 @@
 package kz.findmyname284.springbootproject.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import kz.findmyname284.springbootproject.dto.CheckoutDTO;
+import kz.findmyname284.springbootproject.dto.ProductItemDTO;
+import kz.findmyname284.springbootproject.enums.OrderStatus;
+import kz.findmyname284.springbootproject.exception.InsufficientStockException;
+import kz.findmyname284.springbootproject.model.CatalogProduct;
 import kz.findmyname284.springbootproject.model.Order;
 import kz.findmyname284.springbootproject.model.OrderItem;
-import kz.findmyname284.springbootproject.model.Product;
 import kz.findmyname284.springbootproject.model.User;
+import kz.findmyname284.springbootproject.model.WarehouseProduct;
+import kz.findmyname284.springbootproject.repository.CatalogProductRepository;
 import kz.findmyname284.springbootproject.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final ProductService productService;
+    private final CatalogProductRepository cProductRepository;
 
     public List<Order> findByUser(User user) {
         return orderRepository.findByUser(user);
@@ -27,43 +36,61 @@ public class OrderService {
         return orderRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public Long processOrder(CheckoutDTO dto, User user) {
-        try {
+        Order order = new Order();
+        order.setUser(user);
+        order.setOrderDate(LocalDateTime.now());
+        order.setDeliveryAddress(user.getAddress());
+        order.setStatus(OrderStatus.PENDING);
 
-            Order order = new Order();
-            order.setUser(user);
-            order.setOrderDate(LocalDateTime.now());
-            order.setDeliveryAddress(user.getAddress());
+        List<OrderItem> orderItems = new ArrayList<>();
 
-            List<OrderItem> items = dto.products().stream()
-                    .map(item -> {
-                        Product product = productService.findById(item.id());
-                        int stock = product.getStock() - item.quantity();
-                        if (stock < 0) {
-                            throw new RuntimeException("Not enough stock");
-                        }
-                        product.setStock(stock);
-                        productService.save(product);
+        BigDecimal total = BigDecimal.ZERO;
 
-                        OrderItem orderItem = new OrderItem();
-                        orderItem.setOrder(order);
-                        orderItem.setProduct(product);
-                        orderItem.setQuantity(item.quantity());
-                        return orderItem;
-                    })
-                    .toList();
+        for (ProductItemDTO item : dto.products()) {
+            Optional<CatalogProduct> optionalProduct = cProductRepository.findById(item.id());
+            CatalogProduct product = optionalProduct.isPresent() ? optionalProduct.get() : null;
+            if (product == null) {
+                throw new RuntimeException("Product not found");
+            }
 
-            order.setItems(items);
+            WarehouseProduct baseProduct = product.getBaseProduct();
 
-            orderRepository.save(order);
+            Long remainingQty = item.quantity();
 
-            return order.getId();
-        } catch (Exception e) {
-            return -1L;
+            if (remainingQty <= 0) {
+                throw new InsufficientStockException("Not enough stock for product: " + baseProduct.getName());
+            }
+            
+            remainingQty = Math.min(product.getQuantity(), remainingQty);
+
+            BigDecimal price = product.getPrice().multiply(BigDecimal.ONE.subtract(product.getDiscount().divide(BigDecimal.valueOf(100))));
+            
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProduct(product);
+            orderItem.setPrice(price);
+            orderItem.setQuantity(remainingQty);
+            orderItem.setWarehouse(baseProduct.getWarehouse());
+            orderItems.add(orderItem);
+
+            product.setQuantity(product.getQuantity() - remainingQty);
+            total = total.add(price);
+            cProductRepository.save(product);
         }
+
+        order.setItems(orderItems);
+        order.setTotal(total);
+        Order savedOrder = orderRepository.save(order);
+        return savedOrder.getId();
     }
 
-    public void save(Order order) {
-        orderRepository.save(order);
+    public Order save(Order order) {
+        return orderRepository.save(order);
+    }
+
+    public List<Order> findByStatusAndStatusUpdateTimeBefore(OrderStatus sending, LocalDateTime minusMinutes) {
+        return orderRepository.findByStatusAndStatusUpdateTimeBefore(sending, minusMinutes);
     }
 }

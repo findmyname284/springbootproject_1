@@ -1,12 +1,16 @@
 package kz.findmyname284.springbootproject.rest;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 
 import javax.naming.AuthenticationException;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,7 +38,7 @@ public class AuthRestController {
     @CrossOrigin
     public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO dto) {
         try {
-            userService.register(dto);
+            userService.register(dto.setRole("USER").setBalance(BigDecimal.ZERO));
             return ResponseEntity.ok().body(Collections.singletonMap("message", "Registration successful"));
         } catch (AlreadyExistsException e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
@@ -58,5 +62,12 @@ public class AuthRestController {
         } catch (AuthenticationException e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
+    }
+
+    
+    @GetMapping("/me")
+    public ResponseEntity<?> me(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByUsername(userDetails.getUsername());
+        return ResponseEntity.ok().body(user);
     }
 }

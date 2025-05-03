@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <section th:fragment="users" class="users-section none" th:id="users">
+        <div class="section-header">
+            <h2><i class="fas fa-user-edit"></i> Users</h2>
+        </div>
+        <button onclick="Modal.open('user-modal')" class="btn-add toggle-btn">
+            <i class="fas fa-plus"></i> Добавить пользователя
+        </button>
+
+        <div id="users-list" class="card-grid"></div>
+        <div class="modal-overlay" id="user-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('user-modal')">&times;</span>
+                <h2>Добавить пользователя</h2>
+                <form id="user-form" class="modal-form">
+                    <div class="form-group">
+                        <label>Логин</label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Фамилия</label>
+                        <input type="text" class="form-control" name="surname" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Имя</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Телефон</label>
+                        <input type="tel" class="form-control" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Пароль</label>
+                        <input type="password" class="form-control" name="password" required minlength="6">
+                        <div class="error-message">Пароль должен содержать минимум 6 символов</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Подтвердите пароль</label>
+                        <input type="password" class="form-control" name="confirmPassword" required>
+                        <div class="error-message">Пароли не совпадают</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Баланс</label>
+                        <input type="number" class="form-control" name="balance" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Адрес</label>
+                        <input type="text" class="form-control" name="address">
+                    </div>
+                    <div class="form-group">
+                        <label>Роль</label>
+                        <select name="role" class="select-role form-control"></select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="Modal.close('user-modal')"
+                            class="btn-secondary btn-cancel btn-submit">Отмена</button>
+                        <button type="submit" class="btn-primary btn-submit">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-overlay" id="user-edit-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('user-edit-modal')">&times;</span>
+                <h2>Редактирование пользователя</h2>
+                <form id="user-edit-form" class="modal-form">
+                    <input type="text" name="id" style="display: none;">
+                    <div class="form-group">
+                        <label>Логин</label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Имя</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Фамилия</label>
+                        <input type="text" class="form-control" name="surname" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Телефон</label>
+                        <input type="tel" class="form-control" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Баланс</label>
+                        <input type="number" class="form-control" name="balance" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Адрес</label>
+                        <input type="text" class="form-control" name="address">
+                    </div>
+                    <div class="form-group">
+                        <label>Роль</label>
+                        <select name="role" class="select-role form-control"></select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="Modal.close('user-modal')"
+                            class="btn-secondary btn-cancel btn-submit">Отмена</button>
+                        <button type="submit" class="btn-primary btn-submit">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+
+</body>
+
+</html>

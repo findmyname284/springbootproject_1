@@ -1,5 +1,6 @@
 package kz.findmyname284.springbootproject.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,11 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items = new ArrayList<>();
+
+    private BigDecimal total;
+
+    @Column(name = "status_update_time")
+    private LocalDateTime statusUpdateTime;
 
     public Long getId() {
         return id;
@@ -88,5 +94,21 @@ public class Order {
 
     public void setItems(List<OrderItem> items) {
         this.items = items;
+    }
+
+    public LocalDateTime getStatusUpdateTime() {
+        return statusUpdateTime;
+    }
+
+    public void setStatusUpdateTime(LocalDateTime statusUpdateTime) {
+        this.statusUpdateTime = statusUpdateTime;
+    }
+
+    public BigDecimal getTotal() {
+        return total;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.total = total;
     }
 }

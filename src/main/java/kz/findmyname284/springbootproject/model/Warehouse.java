@@ -23,6 +23,9 @@ public class Warehouse {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
+    private String address;
+
     public Long getId() {
         return id;
     }
@@ -45,5 +48,13 @@ public class Warehouse {
 
     public void setName(String location) {
         this.name = location;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

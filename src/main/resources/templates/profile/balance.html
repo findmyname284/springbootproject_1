@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/base}">
+
+<body>
+    <main th:fragment="content">
+        <div class="balance-container">
+            <div class="balance-card">
+                <h2>Current Balance</h2>
+                <div class="current-balance"
+                    th:text="${#numbers.formatDecimal(user.balance, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></div>
+                <button class="pay-button pay-balance-button" id="pay-balance-button">Полнить баланс</button>
+            </div>
+            <div class="payment-form payment-input none">
+                <h2>Пополнить баланс</h2>
+                <input type="number" placeholder="Сумма" id="amount" name="amount" class="form-input" required>
+                <p>Минимальная сумма пополнения - 1000 тенге</p>
+
+            </div>
+
+            <div th:replace="cart/fragments :: payment-form"></div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const errorDate = document.querySelector('.error-message-date');
+                const errorName = document.querySelector('.error-message-name');
+                const cardIcon = document.querySelector('.card-icon');
+                const paymentInput = document.querySelector('.payment-input');
+                const input = document.getElementById("amount");
+                const paymentLayout = document.getElementById('payment-card');
+
+                document.querySelector('.address').classList.add("none");
+                document.querySelector('.error-message-address').classList.add("none");
+
+                let amount = 0;
+
+                input.addEventListener('input', () => {
+                    if (input.value < 1000) {
+                        input.style.border = '2px red solid';
+                        paymentLayout.classList.add('none')
+                    } else {
+                        input.style.border = 'none';
+                        paymentLayout.classList.remove('none');
+                        amount = input.value;
+                    }
+                });
+
+                document.getElementById('pay-balance-button').addEventListener('click', () => {
+                    paymentInput.classList.remove('none');
+                });
+
+                errorDate.style.display = 'none';
+                errorName.style.display = 'none';
+
+                if (localStorage.getItem('cardNumber')) {
+                    document.getElementById('cardName').value = localStorage.getItem('cardName');
+                    document.getElementById('cardNumber').value = localStorage.getItem('cardNumber');
+                    document.getElementById('expiryDate').value = localStorage.getItem('expiryDate');
+                    document.getElementById('cardCvv').value = localStorage.getItem('cardCvv');
+                    document.getElementById('saveData').checked = localStorage.getItem('saveData');
+                }
+
+                document.getElementById('cardNumber').addEventListener('input', function (e) {
+                    let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+                    let formatted = value.match(/.{1,4}/g);
+                    e.target.value = formatted ? formatted.join(' ') : '';
+                    if (e.target.value.length >= 20) {
+                        e.target.value = e.target.value.slice(0, 19);
+                    }
+                    if (e.target.value.startsWith("4")) {
+                        cardIcon.className = 'fab fa-cc-visa card-icon';
+                    } else if (e.target.value.startsWith("5")) {
+                        cardIcon.className = 'fab fa-cc-mastercard card-icon';
+                    } else {
+                        cardIcon.className = 'fab fa-cc-discover card-icon';
+                    }
+                });
+
+                document.getElementById('expiryDate').addEventListener('input', function (e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 2) {
+                        let month = value.slice(0, 2);
+                        let year = value.slice(2, 4);
+                        if (month > 12) {
+                            month = 12;
+                        }
+                        if (year < new Date().getFullYear().toString().slice(-2) || year > (new Date().getFullYear() + 10).toString().slice(-2)) {
+                            errorDate.style.display = 'block';
+                        } else if (year === new Date().getFullYear().toString().slice(-2) && month <= new Date().getMonth() + 1) {
+                            errorDate.style.display = 'block';
+                        } else {
+                            errorDate.style.display = 'none';
+                        }
+                        value = month + '/' + year;
+                    }
+                    e.target.value = value;
+                });
+
+                document.getElementById('cardCvv').addEventListener('input', function (e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 3) {
+                        value = value.slice(0, 3);
+                    }
+                    e.target.value = value;
+                });
+
+                document.querySelector(".pay-card-button").addEventListener('click', function (e) {
+
+                    let name = document.getElementById('cardName').value;
+                    let cardNumber = document.getElementById('cardNumber').value;
+                    let expiryDate = document.getElementById('expiryDate').value;
+                    let cardCvv = document.getElementById('cardCvv').value;
+
+                    if (document.getElementById('saveData').checked) {
+                        localStorage.setItem('cardName', name);
+                        localStorage.setItem('cardNumber', cardNumber);
+                        localStorage.setItem('expiryDate', expiryDate);
+                        localStorage.setItem('cardCvv', cardCvv);
+                        localStorage.setItem('saveData', document.getElementById('saveData').checked);
+                    }
+
+                    API.post("/api/payments/balance/add", {
+                        name: name,
+                        cardNumber: cardNumber,
+                        expiryDate: expiryDate,
+                        cardCvv: cardCvv,
+                        amount: amount
+                    }).then(data => {
+                        if (data.success)
+                            window.location.href = `/dashboard`;
+                        else if (data.error) {
+                            notification.className = 'error';
+                            showNotification(data.error);
+                        }
+                    });
+                });
+            });
+
+        </script>
+        <style>
+            .balance-container {
+                max-width: 500px;
+                margin: 3rem auto;
+                padding: 2rem;
+                background: #fff;
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+
+            .balance-card {
+                text-align: center;
+                padding: 2rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 12px;
+                color: white;
+                margin-bottom: 2rem;
+            }
+
+            .current-balance {
+                font-size: 2.5rem;
+                font-weight: 600;
+                margin: 1rem 0;
+            }
+        </style>
+    </main>
+</body>
+
+</html>

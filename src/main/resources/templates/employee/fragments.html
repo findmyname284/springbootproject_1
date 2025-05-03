@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <div th:fragment="section-header" class="section-header">
+        <h2><i class="fas fa-box-open"></i> Продукты</h2>
+    </div>
+    <div th:fragment="product-section">
+        <button onclick="Modal.open('product-modal')" class="btn-add-product toggle-btn"><i class="fas fa-plus"></i>
+            Добавить продукт</button>
+        <div class="product-list">
+            <ul th:each="product : ${products}">
+                <li class="product-card" th:object="${product}">
+                    <div class="product-image-wrapper">
+                        <img class="product-image" th:src="@{${product.image}}">
+                        <div class="product-actions">
+                            <button class="action-btn edit-btn" th:onclick="'editProduct(' + ${product.id} + ')'"
+                                th:attr="data-id=${product.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button th:if="isManager" class="action-btn delete-btn"
+                                th:onclick="'deleteProduct(' + ${product.id} + ')'" th:attr="data-id=${product.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="product-title" th:text="${product.name}"></h3>
+                        <div class="product-meta">
+                            <span class="product-price"
+                                th:text="${product.basePrice == null ? 'нет цены' : #numbers.formatDecimal(product.basePrice, 0, 'COMMA', 2, 'POINT') + ' ₸'}"></span>
+                            <span class="product-stock"
+                                th:text="${'Stock: ' + (product.quantity == null ? 0 : product.quantity) + ' шт.'}"></span>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div th:fragment="add-product">
+        <div class="modal-overlay" id="product-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('product-modal')">&times;</span>
+                <h2>Добавить продукт</h2>
+                <form class="add-product-form" id="productForm">
+
+                    <div class="form-group" style="margin-bottom: 0 !important;">
+                        <label for="productName">Добавить фото:</label>
+                        <button type="button" class="btn-add-photo action-btn"
+                            style="border: none; background: #2962FF; color: white;"
+                            onclick="Modal.open('upload-container')">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <div class="preview" id="preview"></div>
+                    </div>
+
+                    <div class="modal-overlay upload-container" id="upload-container">
+                        <div class="modal">
+                            <span class="close-btn" onclick="Modal.close('upload-container')">&times;</span>
+                            <div class="drop-zone" id="dropZone">
+                                <div class="drop-content">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Перетащите файлы сюда или кликните для выбора</p>
+                                </div>
+                                <input type="file" id="fileInput" hidden>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Название продукта:</label>
+                        <input type="text" id="name" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Описание:</label>
+                        <textarea id="description" name="description" class="form-input" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="sku">Штрих-код:</label>
+                        <input type="text" id="sku" name="sku" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">Количество:</label>
+                        <input type="number" id="quantity" name="quantity" class="form-input" required>
+                    </div>
+                    <div th:if="${isManager != null or isManager == true}" class="form-group">
+                        <label for="basePrice">Цена:</label>
+                        <input type="number" id="basePrice" name="basePrice" class="form-input" required step="0.01">
+                    </div>
+                    <div class="form-group" th:if="${isManager != null}">
+                        <label for="warehouseId">Склад:</label>
+                        <select name="warehouseId" class="warehouse-select form-input" id="warehouseId"></select>
+                    </div>
+                    <button type="submit" class="btn-submit">Добавить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:fragment="edit-product">
+        <div class="modal-overlay" id="product-edit-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('product-edit-modal')">&times;</span>
+                <h2>Редактировать продукт</h2>
+                <form class="edit-product-form" id="productEditForm">
+
+                    <div class="form-group" style="margin-bottom: 0 !important;">
+                        <label for="productName">Добавить фото:</label>
+                        <button type="button" class="btn-add-photo action-btn"
+                            style="border: none; background: #2962FF; color: white;"
+                            onclick="Modal.open('upload-container-edit')">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <div class="preview" id="preview"></div>
+                    </div>
+
+                    <div class="modal-overlay upload-container" id="upload-container-edit">
+                        <div class="modal">
+                            <span class="close-btn" onclick="Modal.close('upload-container-edit')">&times;</span>
+                            <div class="drop-zone" id="dropZone">
+                                <div class="drop-content">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Перетащите файлы сюда или кликните для выбора</p>
+                                </div>
+                                <input type="file" id="fileInput" class="productEditForm" hidden>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="number" name="id" id="id" hidden>
+                    <div class="form-group">
+                        <label for="name">Название продукта:</label>
+                        <input type="text" id="name" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Описание:</label>
+                        <textarea id="description" name="description" class="form-input" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="sku">Штрих-код:</label>
+                        <input type="text" id="sku" name="sku" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">Количество:</label>
+                        <input type="number" id="quantity" name="quantity" class="form-input" required>
+                    </div>
+                    <div class="form-group" th:if="${isManager != null}">
+                        <label for="basePrice">Цена:</label>
+                        <input type="number" id="basePrice" name="basePrice" class="form-input" required step="0.01">
+                    </div>
+                    <div class="form-group" th:if="${isManager != null}">
+                        <label for="warehouseId">Склад:</label>
+                        <select name="warehouseId" class="warehouse-select form-input" id="warehouseId"></select>
+                    </div>
+                    <button type="submit" class="btn-submit">Сохранить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

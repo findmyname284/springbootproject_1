@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <div th:fragment="payment-form" class="payment-card payment-form none" id="payment-card">
+        <div class="form-group">
+            <label class="form-label">Имя владельца карты</label>
+            <input type="text" class="form-input" th:value="${user.surname} + ' ' + ${user.name}"
+                id="cardName" required>
+            <div class="error-message-name error">Введите имя владельца карты</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Номер карты</label>
+            <div class="card-input-group">
+                <input type="text" class="form-input" id="cardNumber" placeholder="4242 4242 4242 4242"
+                    required>
+                <div class="card-icons">
+                    <i class="card-icon" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label class="form-label">Срок действия</label>
+                <input type="text" class="form-input" id="expiryDate" placeholder="MM/ГГ" required>
+                <div class="error-message-date error">Неверная дата</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">CVV</label>
+                <input type="text" class="form-input" id="cardCvv" placeholder="123" required>
+            </div>
+        </div>
+
+        <div class="form-group address">
+            <label class="form-label">Адрес доставки</label>
+            <input type="text" class="form-input" th:value="${user.address}" id="address" required>
+            <div class="error-message-address">Введите адрес доставки</div>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="saveData">
+            <label for="saveData">Сохранить данные для следующих покупок</label>
+        </div>
+
+        <button type="submit" class="pay-button pay-card-button" id="payButton">Оплатить сейчас</button>
+    </div>
+
+    <div th:fragment="payment-balance" class="payment-balance payment-form" id="payment-balance">
+        <p class="balance-text">Ваш баланс: <span class="balance" th:text="${#numbers.formatDecimal(user.balance, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></span></p>
+        <button type="submit" class="pay-button pay-balance-button" id="payButton">Оплатить из баланса</button>
+    </div>
+</body>
+
+</html>

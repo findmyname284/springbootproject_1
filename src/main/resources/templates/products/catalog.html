@@ -65,24 +65,6 @@
                 z-index: 2;
             }
 
-            .badge {
-                padding: 0.25rem 0.75rem;
-                border-radius: 4px;
-                font-size: 0.75rem;
-                font-weight: 600;
-                text-transform: uppercase;
-            }
-
-            .badge.new {
-                background: var(--accent);
-                color: white;
-            }
-
-            .badge.discount {
-                background: var(--discount);
-                color: white;
-            }
-
             .quick-view {
                 position: absolute;
                 bottom: 1rem;
@@ -133,12 +115,6 @@
                 color: var(--accent);
                 font-size: 1.25rem;
                 font-weight: 700;
-            }
-
-            .old-price {
-                color: var(--text-light);
-                font-size: 0.9rem;
-                text-decoration: line-through;
             }
 
             .product-meta {
@@ -243,23 +219,23 @@
                 <div class="product-card" th:each="product : ${products}">
                     <div class="card-inner">
                         <div class="product-image-wrapper">
-                            <img class="product-image" th:if="${product.image != ''}" th:src="@{${product.image}}"
+                            <img class="product-image" th:if="${product.baseProduct.image != ''}" th:src="@{${product.baseProduct.image}}"
                                 alt="Product Image">
-                            <img class="product-image" th:src="@{/img/no-image.png}" alt="Product Image">
-                            <div class="product-badges">
+                            <div class="product-badges" th:if="${product.baseProduct.created != null}">
                                 <span class="badge new"
-                                    th:if="${product.created != null and T(java.time.temporal.ChronoUnit).DAYS.between(product.created.toLocalDate(), T(java.time.LocalDate).now()) < 1}">
+                                    th:if="${product.baseProduct.created != null and T(java.time.temporal.ChronoUnit).DAYS.between(product.baseProduct.created.toLocalDate(), T(java.time.LocalDate).now()) < 7}">
                                     NEW
                                 </span>
+                                <span class="badge discount" th:if="${product.discount > 0}" th:text="${product.discount + '%'}"></span>
                             </div>
                             <button class="quick-view">Быстрый просмотр</button>
                         </div>
                         <div class="product-content">
-                            <h3 class="product-title" th:text="${product.name}"></h3>
+                            <h3 class="product-title" th:text="${product.baseProduct.name}"></h3>
                             <div class="price-wrapper">
-                                <p class="price" th:text="${product.price + ' ₸'}"></p>
-                                <span class="product-stock" th:text="${'Stock: ' + product.stock}" th:attr="data-stock=${product.stock}"></span>
-                                <!-- <p class="old-price" th:if="${product.discount > 0}" th:text="${'$' + product.price}"></p> -->
+                                <p class="price" th:text="${#numbers.formatDecimal((product.price / 100) * (100 - product.discount), 0, 'COMMA', 2, 'POINT') + ' ₸'}"></p>
+                                <span class="product-stock" th:text="${'Stock: ' + product.quantity}" th:attr="data-stock=${product.quantity}"></span>
+                                <p class="old-price" th:if="${product.discount > 0}" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT') + ' ₸'}"></p>
                             </div>
                             <div class="product-meta">
                                 <div class="rating">
@@ -268,7 +244,7 @@
                                 <!-- <span class="reviews" th:text="'('+${product.reviewsCount}+')'"></span> -->
                             </div>
                             <button class="add-to-cart" th:onclick="'addToCart('+${product.id}+');'"
-                                th:attr="data-id=${product.id}" type="button" th:disabled="${product.stock == 0}">
+                                th:attr="data-id=${product.id}" type="button" th:disabled="${product.quantity == 0}">
                                 <i class="fas fa-shopping-cart"></i>
                                 <span>В корзину</span>
                                 <div class="cart-loader"></div>

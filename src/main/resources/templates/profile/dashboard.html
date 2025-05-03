@@ -12,6 +12,7 @@
                     </div>
 
                     <h3 class="username" th:text="${user.surname + ' ' + user.name}"></h3>
+                    <span class="balance" th:text="${'Баланс: ' + #numbers.formatDecimal(user.balance, 0, 'COMMA', 2, 'POINT') + ' ₸'}"></span>
                 </div>
 
                 <nav class="sidebar-nav">
@@ -27,9 +28,18 @@
                     <a href="#promo" class="nav-item" th:classappend="${activeTab == 'promo'} ? 'active'">
                         <i class="fas fa-tag"></i> Акции
                     </a>
-                    <a href="#supplier" class="nav-item" th:classappend="${activeTab == 'supplier'} ? 'active'">
+                    <a href="#supplier" th:if="${employee == null}" class="nav-item" th:classappend="${activeTab == 'supplier'} ? 'active'">
                         <i class="fas fa-truck"></i> <span
                             th:text="${supplier == null ? 'Регистрация как поставщик' : 'Профиль поставщика'}"></span>
+                    </a>
+                    <a href="#employee" th:if="${employee != null}" class="nav-item" th:classappend="${activeTab == 'employee'} ? 'active'">
+                        <i class="fas fa-truck"></i> Сотрудник
+                    </a>
+                    <a th:if="${user.role == T(kz.findmyname284.springbootproject.enums.UserRole).ADMIN}" class="nav-item" href="/admin#users">
+                        <i class="fa-solid fa-user-tie"></i> Admin Panel
+                    </a>
+                    <a th:if="${user.role == T(kz.findmyname284.springbootproject.enums.UserRole).MANAGER}" class="nav-item" href="/manager">
+                        <i class="fa-solid fa-user-tie"></i> Manager Panel
                     </a>
                 </nav>
             </aside>
@@ -71,35 +81,35 @@
                     </div>
 
                     <div class="orders-list">
-                        <!-- <div th:each="order : ${orders}" class="order-card">
+                        <div th:each="order : ${orders}" class="order-card">
                             <div class="order-header">
                                 <div class="order-meta">
                                     <span class="order-id" th:text="'Заказ #' + ${order.id}"></span>
                                     <span class="order-date"
-                                        th:text="${#dates.format(order.order_date, 'dd.MM.yyyy HH:mm')}"></span>
+                                        th:text="${#temporals.format(order.orderDate, 'dd MMM yyyy HH:mm')}"></span>
                                 </div>
                                 <div class="order-status" th:classappend="${order.status}">
-                                    <span th:text="${order.status.label}"></span>
+                                    <span th:text="${order.status}"></span>
                                 </div>
                             </div>
                             <div class="order-details">
                                 <div class="order-items">
                                     <div th:each="item : ${order.items}" class="order-item">
-                                        <img th:src="${item.product.imageUrl}" class="item-image">
+                                        <img th:src="${item.product.baseProduct.image}" class="item-image">
                                         <div class="item-info">
-                                            <h4 th:text="${item.name}"></h4>
+                                            <h4 th:text="${item.product.baseProduct.name}"></h4>
                                             <p
-                                                th:text="${item.quantity} + ' × ' + ${#numbers.formatCurrency(item.price)}">
+                                                th:text="${item.quantity} + ' × ' + ${#numbers.formatDecimal(item.price == null ? 0 : item.price, 0, 'COMMA', 2, 'POINT')} + ' ₸'">
                                             </p>
                                         </div>
+                                        <strong th:with="totalItemPrice=${item.quantity * item.price}" th:text="${#numbers.formatDecimal(totalItemPrice == null ? 0 : totalItemPrice, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></strong>
                                     </div>
                                 </div>
                                 <div class="order-total">
-                                    <span>Итого:</span>
-                                    <strong th:text="${#numbers.formatCurrency(order.totalAmount)}"></strong>
+                                    <span>Итого: </span><strong th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></span>
                                 </div>
                             </div>
-                        </div> -->
+                        </div>
                     </div>
                 </section>
 
@@ -141,7 +151,7 @@
                     </div>
                 </section>
 
-                <section class="supplier-section none" th:id="supplier">
+                <section th:if="${employee == null}" class="supplier-section none" th:id="supplier">
                     <div class="section-header">
                         <h2><i class="fas fa-user-tie"></i> <span
                                 th:text="${supplier == null ? 'Регистрация как поставщик' : 'Профиль поставщика'}"></span>
@@ -150,6 +160,15 @@
 
                     <div th:if="${supplier == null}" th:insert="supplier/register :: register"></div>
                     <div th:unless="${supplier == null}" th:insert="supplier/profile :: products"></div>
+                </section>
+
+                <section th:if="${employee != null}" class="employee-section none" th:id="employee">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user-tie"></i> Работа сотрудника
+                        </h2>
+                    </div>
+
+                    <div th:insert="employee/profile :: products"></div>
                 </section>
             </main>
         </div>
