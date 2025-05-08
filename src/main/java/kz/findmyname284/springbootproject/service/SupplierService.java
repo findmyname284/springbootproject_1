@@ -16,15 +16,15 @@ public class SupplierService {
 
     public void register(SupplierDTO dto, User user) throws AlreadyExistsException {
         if (supplierRepository.existsByUser(user)) {
-            throw new AlreadyExistsException("Supplier already exists");
+            throw new AlreadyExistsException("Пользователь уже поставщик");
         }
         
         if (supplierRepository.existsByEmail(dto.email())) {
-            throw new AlreadyExistsException("Email already exists");
+            throw new AlreadyExistsException("Электронная почта уже существует");
         }
 
         if (supplierRepository.existsByPhone(dto.phone())) {
-            throw new AlreadyExistsException("Phone already exists");
+            throw new AlreadyExistsException("Телефон уже существует");
         }
 
         Supplier supplier = new Supplier();

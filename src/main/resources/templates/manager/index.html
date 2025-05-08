@@ -24,7 +24,63 @@
 
                 <section th:replace="manager/fragments :: warehouses"></section>
 
-                <section th:replace="manager/fragments :: warehouse_products"></section>
+                <section th:replace="manager/fragments :: category"></section>
+
+                <section class="warehouse-products" th:id="warehouse-products">
+                    <div th:replace="employee/fragments :: section-header"></div>
+                    <div th:replace="employee/fragments :: product-section"></div>
+                    <div th:replace="employee/fragments :: add-product"></div>
+                    <div th:replace="employee/fragments :: edit-product"></div>
+                    <style>
+                        .drop-zone {
+                            border: 2px dashed #ccc;
+                            border-radius: 10px;
+                            padding: 2rem;
+                            text-align: center;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            min-height: 200px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+
+                        .drop-zone.dragover {
+                            border-color: #2962FF;
+                            background: rgba(41, 98, 255, 0.05);
+                        }
+
+                        .drop-content {
+                            color: #666;
+                        }
+
+                        .drop-content i {
+                            font-size: 3rem;
+                            color: #2962FF;
+                            margin-bottom: 1rem;
+                        }
+
+                        .preview {
+                            margin-top: 1rem;
+                            display: grid;
+                            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                            gap: 1rem;
+                        }
+
+                        .preview>*:nth-child(3)~* {
+                            display: none;
+                        }
+
+                        .preview-image {
+                            width: 100%;
+                            height: 100px;
+                            object-fit: cover;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+                        }
+                    </style>
+                    <script th:src="@{/js/employee.js}"></script>
+                </section>
             </main>
         </div>
         <script th:src="@{/manager/manager.js}"></script>
@@ -56,6 +112,10 @@
                     '#warehouses': () => {
                         currentPanel = new ManagerPanel();
                         document.querySelector('#warehouses').classList.remove('none');
+                    },
+                    '#category': () => {
+                        currentPanel = new ManagerPanel();
+                        document.querySelector('#category').classList.remove('none');
                     }
                 };
 
@@ -95,20 +155,27 @@
                     ManagerPanel.handleEmployeeUpdate(e);
                 });
 
+                document.getElementById('category-form').addEventListener('submit', e => {
+                    e.preventDefault();
+                    ManagerPanel.addCategory(e);
+                });
+
+                document.getElementById('category-edit-form').addEventListener('submit', e => {
+                    e.preventDefault();
+                    ManagerPanel.updateCategory();
+                })
+
                 document.querySelectorAll('.nav-item').forEach(item => {
                     item.addEventListener('click', function (e) {
                         const hash = this.getAttribute('href');
                         window.location.hash = hash;
 
-                        // Скрыть все секции
                         document.querySelectorAll('section').forEach(section => {
                             section.classList.add('none');
                         });
 
-                        // Показать активную секцию
                         document.querySelector(hash).classList.remove('none');
 
-                        // Инициализация соответствующей панели
                         if (navItems[hash]) navItems[hash]();
                     });
                 });

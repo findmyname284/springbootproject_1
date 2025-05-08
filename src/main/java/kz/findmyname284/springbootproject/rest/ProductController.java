@@ -28,11 +28,13 @@ import kz.findmyname284.springbootproject.dto.WarehouseProductDTO;
 import kz.findmyname284.springbootproject.enums.UserRole;
 import kz.findmyname284.springbootproject.exception.AuthorizationException;
 import kz.findmyname284.springbootproject.model.CatalogProduct;
+import kz.findmyname284.springbootproject.model.Category;
 import kz.findmyname284.springbootproject.model.Employee;
 import kz.findmyname284.springbootproject.model.User;
 import kz.findmyname284.springbootproject.model.Warehouse;
 import kz.findmyname284.springbootproject.model.WarehouseProduct;
 import kz.findmyname284.springbootproject.repository.CatalogProductRepository;
+import kz.findmyname284.springbootproject.repository.CategoryRepository;
 import kz.findmyname284.springbootproject.repository.WarehouseProductRepository;
 import kz.findmyname284.springbootproject.service.EmployeeService;
 import kz.findmyname284.springbootproject.service.UserService;
@@ -49,6 +51,7 @@ public class ProductController {
     private final EmployeeService employeeService;
     private final UserService userService;
     private final WarehouseService warehouseService;
+    private final CategoryRepository categoryRepository;
 
     private final String UPLOAD_DIR = "./uploads/";
 
@@ -62,19 +65,28 @@ public class ProductController {
 
             Optional<Employee> employee = employeeService.findByUser(user);
 
+            Optional<Category> category = categoryRepository.findById(productDto.categoryId());
+
+            if (category.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "Категория не найдена"));
+            }
+
             Warehouse warehouse = null;
 
-            if (!employee.isPresent()) {
+            if (productDto.warehouseId() != null) {
                 Authorization.checkRole(user, UserRole.ADMIN, UserRole.MANAGER);
                 warehouse = warehouseService.findById(productDto.warehouseId());
-            } else {
+            } else if (employee.isPresent()) {
                 warehouse = warehouseService.findByEmployee(employee.get());
-
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Collections.singletonMap("error", "Сотрудник не найден"));
             }
 
             if (warehouse == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Collections.singletonMap("error", "Warehouse not found"));
+                        .body(Collections.singletonMap("error", "Склад не найден"));
             }
 
             WarehouseProduct product = new WarehouseProduct();
@@ -84,7 +96,15 @@ public class ProductController {
             product.setImage(productDto.image() == null ? "/img/no-image.png" : productDto.image());
             product.setQuantity(productDto.quantity());
             product.setWarehouse(warehouse);
+            product.setCategory(category.get());
             product.setCreated(LocalDateTime.now());
+
+            try {
+                Authorization.checkRole(user, UserRole.MANAGER, UserRole.ADMIN);
+                product.setBasePrice(productDto.basePrice());
+            } catch (AuthorizationException e) {
+                // ignore
+            }
 
             wProductRepository.save(product);
 
@@ -92,7 +112,7 @@ public class ProductController {
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                    Map.of("error", "Ошибка создания продукта: " + e.getMessage()));
+                    Map.of("error", "Ошибка при создании продукта: " + e.getMessage()));
         }
     }
 
@@ -116,7 +136,7 @@ public class ProductController {
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("error", "Failed to upload file"));
+                    .body(Collections.singletonMap("error", "Не удалось загрузить файл"));
         }
     }
 
@@ -134,13 +154,13 @@ public class ProductController {
             Authorization.checkRole(user, UserRole.MANAGER, UserRole.ADMIN, UserRole.EMPLOYEE);
 
             WarehouseProduct product = wProductRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Product not found: " + id));
+                    .orElseThrow(() -> new RuntimeException("Продукт не найден: " + id));
 
             return ResponseEntity.ok().body(product);
         } catch (AuthorizationException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "Not found"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "Не найдено"));
         }
     }
 
@@ -155,7 +175,15 @@ public class ProductController {
             Optional<WarehouseProduct> productOptional = wProductRepository.findById(productDto.id());
 
             if (productOptional.isEmpty()) {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "Продукт не найден"));
+            }
+
+            Optional<Category> category = categoryRepository.findById(productDto.categoryId());
+
+            if (category.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "Категория не найдена"));
             }
 
             WarehouseProduct savedProduct = productOptional.get();
@@ -164,12 +192,13 @@ public class ProductController {
             savedProduct.setSku(productDto.sku());
             savedProduct.setImage(productDto.image() == null ? "/img/no-image.png" : productDto.image());
             savedProduct.setQuantity(productDto.quantity());
+            savedProduct.setCategory(category.get());
             try {
                 Authorization.checkRole(user, UserRole.MANAGER, UserRole.ADMIN);
                 Warehouse warehouse = warehouseService.findById(productDto.warehouseId());
                 if (warehouse == null) {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(Collections.singletonMap("error", "Warehouse not found"));
+                            .body(Collections.singletonMap("error", "Склад не найден"));
                 }
                 savedProduct.setBasePrice(productDto.basePrice());
                 savedProduct.setWarehouse(warehouse);
@@ -179,7 +208,7 @@ public class ProductController {
 
             wProductRepository.save(savedProduct);
 
-            return ResponseEntity.ok().body(Collections.singletonMap("success", "Product updated"));
+            return ResponseEntity.ok().body(Collections.singletonMap("success", "Продукт обновлен"));
         } catch (AuthorizationException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {

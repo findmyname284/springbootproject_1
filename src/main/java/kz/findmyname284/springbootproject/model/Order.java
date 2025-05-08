@@ -30,7 +30,7 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "order_date", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime orderDate;
 
     @Enumerated(EnumType.STRING)
@@ -45,7 +45,7 @@ public class Order {
 
     private BigDecimal total;
 
-    @Column(name = "status_update_time")
+    @Column(name = "status_update_time", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime statusUpdateTime;
 
     public Long getId() {

@@ -216,32 +216,43 @@
         </style>
         <section class="products-section">
             <div class="products-grid">
-                <div class="product-card" th:each="product : ${products}">
+                <div th:if="${products != null or products.size() != 0}" class="product-card"
+                    th:each="product : ${products}">
                     <div class="card-inner">
                         <div class="product-image-wrapper">
-                            <img class="product-image" th:if="${product.baseProduct.image != ''}" th:src="@{${product.baseProduct.image}}"
-                                alt="Product Image">
+                            <img class="product-image" th:if="${product.baseProduct.image != ''}"
+                                th:src="@{${product.baseProduct.image}}" alt="Product Image">
                             <div class="product-badges" th:if="${product.baseProduct.created != null}">
                                 <span class="badge new"
                                     th:if="${product.baseProduct.created != null and T(java.time.temporal.ChronoUnit).DAYS.between(product.baseProduct.created.toLocalDate(), T(java.time.LocalDate).now()) < 7}">
                                     NEW
                                 </span>
-                                <span class="badge discount" th:if="${product.discount > 0}" th:text="${product.discount + '%'}"></span>
+                                <span class="badge discount" th:if="${product.discount > 0}"
+                                    th:text="${product.discount + '%'}"></span>
                             </div>
                             <button class="quick-view">Быстрый просмотр</button>
                         </div>
                         <div class="product-content">
                             <h3 class="product-title" th:text="${product.baseProduct.name}"></h3>
+                            <div class="description-wrapper" th:if="${product.baseProduct.description != null and product.baseProduct.description != ''}">
+                                <div class="product-description" th:text="${product.baseProduct.description}"></div>
+                                <i class="fas fa-info-circle description-icon"></i> Описание
+                            </div>
                             <div class="price-wrapper">
-                                <p class="price" th:text="${#numbers.formatDecimal((product.price / 100) * (100 - product.discount), 0, 'COMMA', 2, 'POINT') + ' ₸'}"></p>
-                                <span class="product-stock" th:text="${'Stock: ' + product.quantity}" th:attr="data-stock=${product.quantity}"></span>
-                                <p class="old-price" th:if="${product.discount > 0}" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT') + ' ₸'}"></p>
+                                <p class="price"
+                                    th:text="${#numbers.formatDecimal((product.price / 100) * (100 - product.discount), 0, 'COMMA', 2, 'POINT') + ' ₸'}">
+                                </p>
+                                <span class="product-stock" th:text="${'Stock: ' + product.quantity}"
+                                    th:attr="data-stock=${product.quantity}"></span>
+                                <p class="old-price" th:if="${product.discount > 0}"
+                                    th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT') + ' ₸'}">
+                                </p>
+                            </div>
+                            <div class="product-category">
+                                <span th:text="${product.baseProduct.category.name}"></span>
                             </div>
                             <div class="product-meta">
-                                <div class="rating">
-                                    <!-- <div class="stars" th:style="'width: ' + ${product.rating*20} + '%;'"></div> -->
-                                </div>
-                                <!-- <span class="reviews" th:text="'('+${product.reviewsCount}+')'"></span> -->
+                                
                             </div>
                             <button class="add-to-cart" th:onclick="'addToCart('+${product.id}+');'"
                                 th:attr="data-id=${product.id}" type="button" th:disabled="${product.quantity == 0}">
@@ -251,6 +262,10 @@
                             </button>
                         </div>
                     </div>
+                </div>
+                <div th:if="${products == null or products.empty}" class="empty-state">
+                    <i class="fas fa-box-open"></i>
+                    <p>Товары не найдены</p>
                 </div>
             </div>
             <script>

@@ -1,6 +1,5 @@
 package kz.findmyname284.springbootproject.service;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import javax.naming.AuthenticationException;
@@ -29,15 +28,15 @@ public class UserService {
 
     public void register(RegisterDTO dto) throws AlreadyExistsException {
         if (userRepo.existsByUsername(dto.username())) {
-            throw new AlreadyExistsException("Username already exists");
+            throw new AlreadyExistsException("Имя пользователя уже существует");
         }
 
         if (userRepo.existsByEmail(dto.email())) {
-            throw new AlreadyExistsException("Email already exists");
+            throw new AlreadyExistsException("Электронная почта уже существует");
         }
 
         if (userRepo.existsByPhone(dto.phone())) {
-            throw new AlreadyExistsException("Phone already exists");
+            throw new AlreadyExistsException("Телефон уже существует");
         }
 
         User user = new User();
@@ -49,8 +48,8 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(dto.password()));
         user.setAddress(dto.address());
         user.setPhone(dto.phone());
-        user.setBalance(BigDecimal.ZERO);
-        user.setRole(UserRole.USER);
+        user.setBalance(dto.balance());
+        user.setRole(UserRole.valueOf(dto.role()));
 
         userRepo.save(user);
     }
@@ -58,7 +57,7 @@ public class UserService {
     public User authenticate(LoginDTO dto) throws AuthenticationException {
         User user = userRepo.findByUsername(dto.username());
         if (user == null) {
-            throw new AuthenticationException("Invalid username or password");
+            throw new AuthenticationException("Неверное имя пользователя или пароль");
         }
         return user;
     }
@@ -76,12 +75,28 @@ public class UserService {
         return userRepo.findById(id).get();
     }
 
-    public Object updateUser(Long id, UpdateUserRequest request) {
+    public User updateUser(Long id, UpdateUserRequest dto) throws AlreadyExistsException {
         User user = userRepo.findById(id).get();
-        user.setUsername(request.username());
-        user.setEmail(request.email());
-        user.setBalance(request.balance());
-        user.setRole(UserRole.valueOf(request.role()));
+        if (userRepo.existsByUsername(dto.username()) && !user.getUsername().equals(dto.username())) {
+            throw new AlreadyExistsException("Имя пользователя уже существует");
+        }
+
+        if (userRepo.existsByEmail(dto.email()) && !user.getEmail().equals(dto.email())) {
+            throw new AlreadyExistsException("Электронная почта уже существует");
+        }
+
+        if (userRepo.existsByPhone(dto.phone()) && !user.getPhone().equals(dto.phone())) {
+            throw new AlreadyExistsException("Телефон уже существует");
+        }
+
+        user.setName(dto.name());
+        user.setSurname(dto.surname());
+        user.setUsername(dto.username());
+        user.setEmail(dto.email());
+        user.setAddress(dto.address());
+        user.setPhone(dto.phone());
+        user.setBalance(dto.balance());
+        user.setRole(UserRole.valueOf(dto.role()));
         return userRepo.save(user);
     }
 
@@ -91,5 +106,9 @@ public class UserService {
 
     public void save(User user) {
         userRepo.save(user);
+    }
+
+    public void deleteById(Long id) {
+        userRepo.deleteById(id);
     }
 }

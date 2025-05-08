@@ -12,7 +12,7 @@
             </div>
 
             <div class="timeline">
-                <button type="submit" class="btn btn-primary" id="send">Send Return Request</button>
+                <button type="submit" class="btn btn-primary" id="send">Отправить запрос на возврат</button>
             </div>
 
             <div class="product-grid">
@@ -20,8 +20,8 @@
                     <img th:src="${item.product.baseProduct.image}" alt="Product image" class="product-image">
                     <div>
                         <h4 th:text="${item.product.baseProduct.name}"></h4>
-                        <p>Quantity: [[${item.quantity}]]</p>
-                        <p>Price: $[[${#numbers.formatDecimal(item.price, 1, 2)}]]</p>
+                        <p>Количество: [[${item.quantity}]]</p>
+                        <p>Цена: $[[${#numbers.formatDecimal(item.price, 1, 2)}]]</p>
                     </div>
                 </div>
             </div>

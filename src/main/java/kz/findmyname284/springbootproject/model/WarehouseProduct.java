@@ -37,6 +37,10 @@ public class WarehouseProduct {
     private LocalDateTime created;
 
     @ManyToOne
+    @JoinColumn(nullable = false)
+    private Category category;
+
+    @ManyToOne
     @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;
 
@@ -112,5 +116,13 @@ public class WarehouseProduct {
 
     public void setCreated(LocalDateTime created) {
         this.created = created;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }

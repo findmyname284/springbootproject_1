@@ -52,7 +52,7 @@ public class OrderService {
             Optional<CatalogProduct> optionalProduct = cProductRepository.findById(item.id());
             CatalogProduct product = optionalProduct.isPresent() ? optionalProduct.get() : null;
             if (product == null) {
-                throw new RuntimeException("Product not found");
+                throw new RuntimeException("Продукт не найден");
             }
 
             WarehouseProduct baseProduct = product.getBaseProduct();
@@ -60,7 +60,7 @@ public class OrderService {
             Long remainingQty = item.quantity();
 
             if (remainingQty <= 0) {
-                throw new InsufficientStockException("Not enough stock for product: " + baseProduct.getName());
+                throw new InsufficientStockException("Недостаточно запасов для продукта: " + baseProduct.getName());
             }
             
             remainingQty = Math.min(product.getQuantity(), remainingQty);
@@ -92,5 +92,13 @@ public class OrderService {
 
     public List<Order> findByStatusAndStatusUpdateTimeBefore(OrderStatus sending, LocalDateTime minusMinutes) {
         return orderRepository.findByStatusAndStatusUpdateTimeBefore(sending, minusMinutes);
+    }
+
+    public List<Order> findByStatusAndOrderDateBefore(OrderStatus sending, LocalDateTime minusMinutes) {
+        return orderRepository.findByStatusAndOrderDateBefore(sending, minusMinutes);
+    }
+
+    public List<Order> findAll() {
+        return orderRepository.findAll();
     }
 }

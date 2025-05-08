@@ -43,7 +43,7 @@ public class OrderController {
             Long id = orderService.processOrder(dto, user);
 
             if (id == -1L) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Order processing failed"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Обработка заказа не удалась"));
             }
 
             return ResponseEntity.ok()
@@ -61,7 +61,7 @@ public class OrderController {
             Order order = orderService.findById(orderId);
 
             if (order == null || !order.getUser().equals(user)) {
-                throw new RuntimeException("Order not found");
+                throw new RuntimeException("Заказ не найден");
             }
 
             if (order.getStatus() == OrderStatus.SENDING) {
@@ -90,12 +90,12 @@ public class OrderController {
                 }
                 order.setStatus(OrderStatus.CANCELLED);
             } else {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Cannot cancel order"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Невозможно отменить заказ"));
             }
 
             orderService.save(order);
 
-            return ResponseEntity.ok().body(Collections.singletonMap("success", "Order cancelled"));
+            return ResponseEntity.ok().body(Collections.singletonMap("success", "Заказ отменен"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }

@@ -105,33 +105,6 @@
                             });
                         });
 
-                        // document.querySelector('.btn-primary').addEventListener('click', () => {
-                        //     const promoCodeInput = document.querySelector('.promo-input');
-                        //     if (!promoCodeInput.value) {
-                        //         promoCodeInput.style = 'border-color: red';
-                        //         return;
-                        //     }
-                        //     fetch('/api/cart/promo', {
-                        //         method: 'POST',
-                        //         headers: {
-                        //             'Content-Type': 'application/json'
-                        //         },
-                        //         body: JSON.stringify({ promoCode: promoCodeInput.value })
-                        //     })
-                        //         .then(response => response.json())
-                        //         .then(data => {
-                        //             if (data.success) {
-                        //                 promoCodeInput.style = 'border-color: green';
-                        //             } else {
-                        //                 promoCodeInput.style = 'border-color: red';
-                        //             }
-                        //         })
-                        //         .catch(error => {
-                        //             console.error('Error applying promo code:', error);
-                        //             alert('Ошибка применения промокода');
-                        //         });
-                        // });
-
                         document.querySelector('.checkout-btn').addEventListener('click', () => {
                             fetch('/api/cart/checkout', {
                                 method: 'POST',

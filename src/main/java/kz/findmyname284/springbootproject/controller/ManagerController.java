@@ -35,7 +35,7 @@ public class ManagerController {
 
             model.addAttribute("products", products);
             model.addAttribute("isManager", true);
-            model.addAttribute("title", "Manager Page");
+            model.addAttribute("title", "Страница менеджера");
             return "manager/index";
         } catch (Exception e) {
             return "redirect:/";

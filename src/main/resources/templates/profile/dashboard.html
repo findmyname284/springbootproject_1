@@ -25,9 +25,6 @@
                     <a href="#stats" class="nav-item" th:classappend="${activeTab == 'stats'} ? 'active'">
                         <i class="fas fa-chart-line"></i> Статистика
                     </a>
-                    <a href="#promo" class="nav-item" th:classappend="${activeTab == 'promo'} ? 'active'">
-                        <i class="fas fa-tag"></i> Акции
-                    </a>
                     <a href="#supplier" th:if="${employee == null}" class="nav-item" th:classappend="${activeTab == 'supplier'} ? 'active'">
                         <i class="fas fa-truck"></i> <span
                             th:text="${supplier == null ? 'Регистрация как поставщик' : 'Профиль поставщика'}"></span>
@@ -36,10 +33,10 @@
                         <i class="fas fa-truck"></i> Сотрудник
                     </a>
                     <a th:if="${user.role == T(kz.findmyname284.springbootproject.enums.UserRole).ADMIN}" class="nav-item" href="/admin#users">
-                        <i class="fa-solid fa-user-tie"></i> Admin Panel
+                        <i class="fa-solid fa-user-tie"></i> Панель администратора
                     </a>
                     <a th:if="${user.role == T(kz.findmyname284.springbootproject.enums.UserRole).MANAGER}" class="nav-item" href="/manager">
-                        <i class="fa-solid fa-user-tie"></i> Manager Panel
+                        <i class="fa-solid fa-user-tie"></i> Панель управления менеджера
                     </a>
                 </nav>
             </aside>
@@ -54,24 +51,24 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Фамилия</label>
-                                <input type="text" th:field="*{surname}" class="form-input">
+                                <input type="text" disabled th:field="*{surname}" class="form-input">
                             </div>
                             <div class="form-group">
                                 <label>Имя</label>
-                                <input type="text" th:field="*{name}" class="form-input">
+                                <input type="text" disabled th:field="*{name}" class="form-input">
                             </div>
                             <div class="form-group">
                                 <label>Email</label>
-                                <input type="email" th:field="*{email}" class="form-input" readonly>
+                                <input type="email" disabled th:field="*{email}" class="form-input" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Адрес</label>
-                                <input type="text" th:field="*{address}" class="form-input">
+                                <input type="text" disabled th:field="*{address}" class="form-input">
                             </div>
                         </div>
-                        <button type="submit" class="btn-save btn-submit">
+                        <!-- <button type="submit" class="btn-save btn-submit">
                             <i class="fas fa-save"></i> Сохранить изменения
-                        </button>
+                        </button> -->
                     </form>
                 </section>
 
@@ -84,7 +81,7 @@
                         <div th:each="order : ${orders}" class="order-card">
                             <div class="order-header">
                                 <div class="order-meta">
-                                    <span class="order-id" th:text="'Заказ #' + ${order.id}"></span>
+                                    <a th:href="@{/cart/checkout?orderId={id}(id=${order.id})}" class="order-id" th:text="'Заказ #' + ${order.id}"></a>
                                     <span class="order-date"
                                         th:text="${#temporals.format(order.orderDate, 'dd MMM yyyy HH:mm')}"></span>
                                 </div>
@@ -106,7 +103,7 @@
                                     </div>
                                 </div>
                                 <div class="order-total">
-                                    <span>Итого: </span><strong th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></span>
+                                    <span>Итого: </span><strong th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></strong>
                                 </div>
                             </div>
                         </div>
@@ -141,16 +138,6 @@
                     </div>
                 </section>
 
-                <section class="promo-section none" th:id="promo">
-                    <h2>Текущие акции</h2>
-                    <div class="promotions-grid">
-                        <div class="promotion-card">
-                            <h3>Скидка 20% на летнюю коллекцию</h3>
-                            <p>Действует до 30.06.2024</p>
-                        </div>
-                    </div>
-                </section>
-
                 <section th:if="${employee == null}" class="supplier-section none" th:id="supplier">
                     <div class="section-header">
                         <h2><i class="fas fa-user-tie"></i> <span
@@ -174,11 +161,6 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script th:inline="javascript">
-            
-            var message = '[[${ user }]]';
-            // alert(message);
-        </script>
 
         <script>
             function updateActiveState() {

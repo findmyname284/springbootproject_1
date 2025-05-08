@@ -16,7 +16,7 @@ public class WarehouseService {
 
     public Warehouse findById(Long id) {
         return warehouseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Warehouse not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Склад не найден: " + id));
     }
 
     public List<Warehouse> findAll() {

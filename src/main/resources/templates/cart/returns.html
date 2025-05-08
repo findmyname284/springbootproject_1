@@ -4,10 +4,10 @@
 <body>
     <main th:fragment="content">
         <div class="returns-container">
-            <h1>My Returns</h1>
+            <h1>Мои Возвраты</h1>
 
             <div th:if="${returns == null or returns.size() == 0}" class="no-returns">
-                <p>No return requests found</p>
+                <p>Запросы на возврат не найдены</p>
             </div>
 
             <div th:each="return : ${returns}" class="return-card">
@@ -15,15 +15,15 @@
                     <img th:src="${return.items[0].product.baseProduct.image}" alt="Product image" class="product-image">
                     <div>
                         <h3 th:text="${return.items[0].product.baseProduct.name}"></h3>
-                        <p>Order #[[${return.id}]]</p>
+                        <p>Заказ #[[${return.id}]]</p>
                     </div>
                 </div>
 
                 <div class="return-meta">
-                    <div class="return-status" th:classappend="'status-' + ${return.status.name().toLowerCase()}">
+                    <div class="return-status order-status" th:classappend="${return.status.name().toUpperCase()}">
                         [[${return.status}]]
                     </div>
-                    <a th:href="@{/returns/{id}(id=${return.id})}" class="view-details">View Details →</a>
+                    <a th:href="@{/returns/{id}(id=${return.id})}" class="view-details">Посмотреть подробности →</a>
                 </div>
             </div>
         </div>

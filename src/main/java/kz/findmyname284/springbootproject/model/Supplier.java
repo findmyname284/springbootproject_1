@@ -37,9 +37,6 @@ public class Supplier {
     @Column(nullable = false)
     private LocalDate registrationDate;
 
-    // @OneToMany(mappedBy = "supplier")
-    // private List<CatalogProduct> products;
-
     public Long getId() {
         return id;
     }
@@ -95,12 +92,4 @@ public class Supplier {
     public void setUser(User user) {
         this.user = user;
     }
-
-    // public List<CatalogProduct> getProducts() {
-    //     return products;
-    // }
-
-    // public void setProducts(List<CatalogProduct> products) {
-    //     this.products = products;
-    // }
 }

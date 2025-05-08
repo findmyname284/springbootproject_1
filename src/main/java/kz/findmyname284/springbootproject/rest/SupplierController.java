@@ -83,15 +83,15 @@ public class SupplierController {
 
             Long quantity = body.get("value");
             if (quantity == null || quantity <= 0) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid quantity"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Неверное количество"));
             }
 
             if (id == null || id <= 0) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid product id"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Неверный идентификатор продукта"));
             }
 
             WarehouseProduct wp = wProductRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Product not found: " + id));
+                    .orElseThrow(() -> new RuntimeException("Продукт не найден: " + id));
 
             if (wp.getQuantity() < quantity) {
                 throw new InsufficientStockException();
@@ -100,7 +100,7 @@ public class SupplierController {
             wp.setQuantity(wp.getQuantity() - quantity);
 
             if (user.getBalance().compareTo(wp.getBasePrice().multiply(BigDecimal.valueOf(quantity))) < 0) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Insufficient balance"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Недостаточный баланс"));
             }
             user.setBalance(user.getBalance().subtract(wp.getBasePrice().multiply(BigDecimal.valueOf(quantity))));
 
@@ -115,7 +115,7 @@ public class SupplierController {
             Supplier supplier = supplierService.findByUser(user);
 
             if (supplier == null) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Supplier not found"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Поставщик не найден"));
             }
 
             CatalogProduct cp = cProductRepository.findBySellerAndBaseProduct(supplier, wp);
@@ -134,7 +134,7 @@ public class SupplierController {
             cProductRepository.save(cp);
             wProductRepository.save(wp);
 
-            return ResponseEntity.ok().body(Collections.singletonMap("success", "Successfully"));
+            return ResponseEntity.ok().body(Collections.singletonMap("success", "Успешно"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
         }
@@ -150,32 +150,32 @@ public class SupplierController {
 
             BigDecimal price = BigDecimal.valueOf((int) body.get("price"));
             if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid price"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Неверная цена"));
             }
 
             BigDecimal discount = BigDecimal.valueOf((int) body.get("discount"));
             if (discount == null || discount.compareTo(BigDecimal.ZERO) < 0
-                    || discount.compareTo(BigDecimal.valueOf(100)) > 0) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid discount"));
+                    || discount.compareTo(BigDecimal.valueOf(50)) > 0) {
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Недействительная скидка"));
             }
 
             if (id == null || id <= 0) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid product id"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Неверный идентификатор продукта"));
             }
 
             CatalogProduct cp = cProductRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Product not found: " + id));
+                    .orElseThrow(() -> new RuntimeException("Продукт не найден:" + id));
 
             if (cp.getSeller().getId() != user.getId()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Collections.singletonMap("error", "You can't edit this product"));
+                        .body(Collections.singletonMap("error", "Вы не можете редактировать этот продукт"));
             }
 
             cp.setPrice(price);
             cp.setDiscount(discount);
             cProductRepository.save(cp);
 
-            return ResponseEntity.ok().body(Collections.singletonMap("success", "Successfully"));
+            return ResponseEntity.ok().body(Collections.singletonMap("success", "Успешно"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
         }
@@ -188,15 +188,15 @@ public class SupplierController {
             Authorization.checkRole(user, UserRole.SUPPLIER, UserRole.MANAGER, UserRole.ADMIN);
 
             if (id == null || id <= 0) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid product id"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Неверный идентификатор продукта"));
             }
 
             CatalogProduct cp = cProductRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Product not found: " + id));
+                    .orElseThrow(() -> new RuntimeException("Продукт не найден: " + id));
 
             if (cp.getSeller().getId() != user.getId()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Collections.singletonMap("error", "You can't view this product"));
+                        .body(Collections.singletonMap("error", "Вы не можете просмотреть этот продукт"));
             }
 
             return ResponseEntity.ok(cp);

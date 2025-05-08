@@ -114,7 +114,7 @@
                 padding: 1rem 2rem;
                 border-radius: var(--radius);
                 box-shadow: var(--shadow-md);
-                z-index: 1000;
+                z-index: 999999;
                 opacity: 0;
                 transition: var(--transition);
                 display: flex;
@@ -275,7 +275,7 @@
         <nav class="navigation">
             <div class="nav-container">
                 <div class="nav-links">
-                    <a th:class="${activePage == 'home' ? 'nav-link active' : 'nav-link'}" href="/home">Home</a>
+                    <a th:class="${activePage == 'home' ? 'nav-link active' : 'nav-link'}" href="/">Домашняя страница</a>
                     <a th:class="${activePage == 'catalog' ? 'nav-link active' : 'nav-link'}"
                         href="/catalog">Каталог</a>
                     <a th:class="${activePage == 'returns' ? 'nav-link active' : 'nav-link'}"
@@ -309,10 +309,6 @@
                         <a href="/dashboard" class="dropdown-item">
                             <i class="fas fa-user-circle"></i>
                             Личный кабинет
-                        </a>
-                        <a href="/settings" class="dropdown-item">
-                            <i class="fas fa-cog"></i>
-                            Настройки
                         </a>
                         <form th:action="@{/logout}" method="post" id="logout-form" class="dropdown-item">
                             <button type="submit" class="logout-btn" onclick="submit()">

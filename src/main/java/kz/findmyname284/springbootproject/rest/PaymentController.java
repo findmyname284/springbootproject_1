@@ -46,11 +46,11 @@ public class PaymentController {
 
             Order order = orderService.findById(dto.id());
             if (order == null) {
-                throw new RuntimeException("Order not found");
+                throw new RuntimeException("Заказ не найден");
             }
 
             if (order.getStatus() != OrderStatus.PENDING) {
-                throw new RuntimeException("Order is not pending");
+                throw new RuntimeException("Заказ не находится в обработке");
             }
 
             order.getItems().stream().forEach(item -> {
@@ -76,16 +76,16 @@ public class PaymentController {
         try {
             Long id = body.get("id");
             if (id == null) {
-                throw new IllegalArgumentException("ID is required");
+                throw new IllegalArgumentException("требуется идентификатор");
             }
             User user = Authorization.getAuthorizationUser(userService, userDetails);
             Order order = orderService.findById(id);
             if (order == null) {
-                throw new RuntimeException("Order not found");
+                throw new RuntimeException("Заказ не найден");
             }
 
             if (order.getStatus() != OrderStatus.PENDING) {
-                throw new RuntimeException("Order is not pending");
+                throw new RuntimeException("Заказ не находится в обработке");
             }
 
             BigDecimal totalAmount = order.getItems().stream()
@@ -97,7 +97,7 @@ public class PaymentController {
 
             BigDecimal balance = user.getBalance().subtract(totalAmount);
             if (balance.compareTo(BigDecimal.ZERO) < 0) {
-                throw new RuntimeException("Insufficient balance");
+                throw new RuntimeException("Недостаточный баланс");
             }
 
             user.setBalance(balance);
@@ -127,7 +127,7 @@ public class PaymentController {
             User user = Authorization.getAuthorizationUser(userService, userDetails);
             int amount = Integer.parseInt(body.get("amount"));
             if (amount < 1000) {
-                throw new RuntimeException("Minimum amount is 1000");
+                throw new RuntimeException("Минимальная сумма 1000");
             }
 
             user.setBalance(user.getBalance().add(BigDecimal.valueOf(amount)));
@@ -135,7 +135,7 @@ public class PaymentController {
 
             user.setBalance(balance);
             userService.save(user);
-            return ResponseEntity.ok().body(Collections.singletonMap("success", "Balance added successfully"));
+            return ResponseEntity.ok().body(Collections.singletonMap("success", "Баланс успешно добавлен"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
@@ -160,15 +160,18 @@ public class PaymentController {
     @Scheduled(fixedRate = 60_000 * 30)
     @Transactional
     public void checkPendings() {
-        System.out.println("Checking pending orders...");
         List<Order> orders = orderService
-                .findByStatusAndStatusUpdateTimeBefore(
+                .findByStatusAndOrderDateBefore(
                         OrderStatus.PENDING,
-                        LocalDateTime.now().minusMinutes(60));
+                        LocalDateTime.now().minusMinutes(30));
+
+        System.out.println("Проверка отложенных ордеров...");
 
         for (Order order : orders) {
+            System.out.println("Отмена ордера " + order.getId() + " " + order.getStatus());
             order.setStatus(OrderStatus.CANCELLED);
             order.setStatusUpdateTime(LocalDateTime.now());
+
             for (OrderItem item : order.getItems()) {
                 CatalogProduct product = item.getProduct();
                 product.setQuantity(product.getQuantity() + item.getQuantity());

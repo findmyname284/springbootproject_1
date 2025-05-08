@@ -5,30 +5,32 @@ class ManagerPanel {
 
     async loadInitialData() {
         try {
-            const [warehouses, employees] = await Promise.all([
+            const [warehouses, employees, categories] = await Promise.all([
                 API.get('/api/manager/warehouses'),
                 API.get('/api/manager/employees'),
+                API.get('/api/manager/categories')
             ]);
 
             this.renderWarehouses(warehouses);
+            this.populateWarehousesSelect(warehouses);
             this.renderEmployees(employees);
             this.populateEmployeesSelect(employees);
             this.loadUsersWithoutEmployee();
-            this.populateWarehousesSelect(warehouses);
+            this.renderCategories(categories);
         } catch (error) {
             notification.className = 'error';
             showNotification('Ошибка загрузки данных' + error);
         }
     }
 
-    async populateWarehousesSelect(warehouses) {
+    populateWarehousesSelect(warehouses) {
         const selects = document.querySelectorAll('.warehouse-select');
         selects.forEach(select => {
             select.innerHTML = warehouses.map(warehouse => `<option value="${warehouse.id}">${warehouse.name}</option>`).join('');
         });
     }
 
-    async populateEmployeesSelect(employees) {
+    populateEmployeesSelect(employees) {
         const select = document.querySelector('.employee-select');
         select.innerHTML = employees.map(employee => `<option value="${employee.id}">${employee.user.surname + ' ' + employee.user.name}</option>`).join('');
     }
@@ -158,10 +160,7 @@ class ManagerPanel {
             form.querySelector('input[name="id"]').value = warehouse.id || '';
             form.querySelector('input[name="name"]').value = warehouse.name || '';
             form.querySelector('input[name="address"]').value = warehouse.address || '';
-            const select = form.querySelector('select[name="employee-id"]');
-            // populateEmployeesSelect(select);
-            // select.selectedOptions[0].value = warehouse.manager?.id || '';
-            // select.selectedOptions[0].text = warehouse.manager?.user.surname || '' + ' ' + warehouse.manager?.user.name || '';
+            form.querySelector('select[name="employee-id"]').value = warehouse.manager?.id || '';
         } catch (error) {
             notification.className = 'error';
             showNotification('Ошибка загрузки пользователя type:' + error);
@@ -269,7 +268,6 @@ class ManagerPanel {
         }
     }
 
-    // Вспомогательные методы
     populateUserSelect(users) {
         const select = document.getElementById('employee-user-select');
         select.innerHTML = users.map(user => `
@@ -287,13 +285,97 @@ class ManagerPanel {
         showNotification(message + ' ' + error);
     }
 
-    
+
     static async getCurrentUserInfo() {
         try {
             const user = await API.get('/api/auth/me');
             return user;
         } catch (error) {
             this.showError('Ошибка загрузки данных о пользователе', error);
+        }
+    }
+
+    renderCategories(categories) {
+        const container = document.getElementById('categories-list');
+        container.innerHTML = categories.map(category => `
+            <div class="category-card" data-employee-id="${category.id}">
+                <h3>${category.name}</h3>
+                <div class="card-actions">
+                    <button class="btn-icon" onclick="ManagerPanel.openCategoryEditForm(${category.id})">✏️</button>
+                    <button class="btn-icon danger" onclick="ManagerPanel.deleteCategory(${category.id})">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    static async addCategory() {
+        try {
+            const formData = new FormData(event.target);
+            await API.post('/api/manager/categories', Object.fromEntries(formData)).then(data => {
+                if (data.error) {
+                    this.showError('Ошибка добавления категории', data.error);
+                    return;
+                } else if (data.success) {
+                    Modal.close('category-modal');
+                    this.showSuccess(data.success);
+                    window.location.reload();
+                }
+            });
+        } catch (error) {
+            this.showError('Ошибка добавления категории', error);
+        }
+    }
+
+    static async updateCategory() {
+        const formData = new FormData(event.target);
+        const id = formData.get('id');
+        try {
+            await API.put(`/api/manager/categories/${id}`, Object.fromEntries(formData)).then(data => {
+                if (data.error) {
+                    this.showError('Ошибка обновления категории', data.error);
+                    return;
+                }
+                Modal.close('category-edit-modal');
+                this.showSuccess(data.success);
+                window.location.reload();
+            });
+        } catch (error) {
+            this.showError('Ошибка обновления категории', error);
+        }
+    }
+
+    static async openCategoryEditForm(id) {
+        try {
+            await API.get(`/api/manager/categories/${id}`).then(category => {
+                if (category.error) {
+                    this.showError('Ошибка открытия формы редактирования категории', category.error);
+                    return;
+                }
+                Modal.open('category-edit-modal');
+                const form = document.getElementById('category-edit-form');
+                form.querySelector('input[name="id"]').value = id;
+                form.querySelector('input[name="name"]').value = category.name;
+            });
+        } catch (error) {
+            this.showError('Ошибка открытия формы редактирования категории', error);
+        }
+    }
+
+    static async deleteCategory(id) {
+        if (!confirm('Вы уверены что хотите удалить категорию?')) return;
+
+        try {
+            await API.delete(`/api/manager/categories/${id}`).then(data => {
+                if (data.error) {
+                    this.showError(data.error, null);
+                    return;
+                }
+                Modal.close('category-edit-modal');
+                this.showSuccess(data.success);
+                window.location.reload();
+            });
+        } catch (error) {
+            this.showError('Ошибка удаления сотрудника', error);
         }
     }
 }

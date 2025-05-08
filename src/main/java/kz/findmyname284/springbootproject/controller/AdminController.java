@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import kz.findmyname284.springbootproject.enums.UserRole;
+import kz.findmyname284.springbootproject.model.Order;
 import kz.findmyname284.springbootproject.model.User;
 import kz.findmyname284.springbootproject.model.WarehouseProduct;
 import kz.findmyname284.springbootproject.repository.WarehouseProductRepository;
+import kz.findmyname284.springbootproject.service.OrderService;
 import kz.findmyname284.springbootproject.service.UserService;
 import kz.findmyname284.springbootproject.utils.Authorization;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminController {
 	private final UserService userService;
+    private final OrderService orderService;
     private final WarehouseProductRepository wProductRepository;
 
     @GetMapping()
@@ -32,10 +35,12 @@ public class AdminController {
             Authorization.checkRole(user, UserRole.ADMIN);
 
             List<WarehouseProduct> products = wProductRepository.findAll();
+            List<Order> orders = orderService.findAll();
 
             model.addAttribute("products", products);
 
-            model.addAttribute("title", "Admin Page");
+            model.addAttribute("title", "Страница администратора");
+            model.addAttribute("orders", orders);
             model.addAttribute("isManager", true);
             return "admin/index";
         } catch (Exception e) {

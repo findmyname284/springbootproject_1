@@ -10,17 +10,17 @@
             </div>
 
             <div class="order-header">
-                <h1 class="order-title" th:text="'Order #' + ${order.id}"></h1>
+                <h1 class="order-title" th:text="'Заказ #' + ${order.id}"></h1>
                 <span class="order-status" th:text="${order.status}"></span>
             </div>
 
             <div class="order-details">
                 <div class="detail-item">
-                    <h3>Order Date</h3>
+                    <h3>Дата заказа</h3>
                     <p th:text="${#temporals.format(order.orderDate, 'dd MMM yyyy HH:mm')}"></p>
                 </div>
                 <div class="detail-item">
-                    <h3>Total Amount</h3>
+                    <h3>Общая сумма</h3>
                     <p
                         th:text="${#numbers.formatDecimal(totalAmount == null ? 0 : totalAmount, 0, 'COMMA', 2, 'POINT')} + ' ₸'">
                     </p>
@@ -59,14 +59,14 @@
             </div>
 
             <div class="order-items">
-                <h2>Items in Order</h2>
+                <h2>Товары в заказе</h2>
                 <div th:each="item : ${order.items}" class="item-card">
-                    <img th:src="${item.product.baseProduct.image}" alt="Product image" class="item-image">
+                    <img th:src="${item.product.baseProduct.image}" class="item-image">
                     <div class="item-info">
                         <h3 th:text="${item.product.baseProduct.name}"></h3>
-                        <p th:text="'Quantity: ' + ${item.quantity}"></p>
+                        <p th:text="'Количество: ' + ${item.quantity}"></p>
                         <p
-                            th:text="'Price: ' + ${#numbers.formatDecimal(item.price == null ? 0 : item.price, 0, 'COMMA', 2, 'POINT')} + ' ₸'">
+                            th:text="'Цена: ' + ${#numbers.formatDecimal(item.price == null ? 0 : item.price, 0, 'COMMA', 2, 'POINT')} + ' ₸'">
                         </p>
                     </div>
                 </div>

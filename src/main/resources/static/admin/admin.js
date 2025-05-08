@@ -22,10 +22,6 @@ class AdminPanel {
         const selects = document.querySelectorAll('.select-role');
         selects.forEach(select => {
             select.innerHTML = roles.map(role => `<option value="${role}">${role}</option>`).join('');
-            if (select.dataset.userId) {
-                const selectedRole = users.find(user => user.id === Number(select.dataset.userId)).role;
-                select.value = selectedRole;
-            }
         })
     }
 
@@ -84,6 +80,26 @@ class AdminPanel {
         }
     }
 
+    static async deleteUser(userId) {
+        try {
+            await API.delete(`/api/admin/users/${userId}`)
+            .then(data => {
+                if (data.error) {
+                    notification.className = 'error';
+                    showNotification(data.error);
+                    return;
+                } else if (data.success) {
+                    notification.className = 'success';
+                    showNotification(data.success);
+                    window.location.reload();
+                }
+            });
+        } catch (error) {
+            notification.className = 'error';
+            showNotification('Ошибка удаления пользователя');
+        }
+    }
+
     static async openEditForm(userId) {
         try {
             Modal.open('user-edit-modal');
@@ -101,7 +117,7 @@ class AdminPanel {
             form.querySelector('select[name="role"]').value = user.role || '';
         } catch (error) {
             notification.className = 'error';
-            showNotification('Ошибка загрузки пользователя ' + error);
+            showNotification('Ошибка загрузки пользователя');
         }
     }
 

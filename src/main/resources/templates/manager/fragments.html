@@ -12,7 +12,9 @@
         <a href="#warehouse-products" id="warehouse-products-nav" class="nav-item">
             <i class="fa-solid fa-boxes-stacked"></i> Товары на складе
         </a>
-
+        <a href="#category" id="category-nav" class="nav-item">
+            <i class="fa-solid fa-list"></i> Категории
+        </a>
     </div>
     <section th:fragment="employees" class="employees-section none" th:id="employees">
         <div class="section-header">
@@ -190,6 +192,49 @@
                         <button type="button" onclick="Modal.close('warehouse-edit-modal')"
                             class="btn-secondary btn-cancel btn-submit">Отмена</button>
                         <button type="submit" class="btn-primary btn-submit">Добавить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+    <section th:fragment="category" class="category-section none" th:id="category">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> Категории</h2>
+        </div>
+        <button onclick="Modal.open('category-modal')" class="btn-add-warehouse toggle-btn">
+            <i class="fas fa-plus"></i>Добавить категорию</button>
+        <div id="categories-list" class="card-grid"></div>
+        <div class="modal-overlay" id="category-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('category-modal')">&times;</span>
+                <h2>Добавить категорию</h2>
+                <form id="category-form" class="modal-form">
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input type="text" class="form-control" name="name" id="name" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="Modal.close('category-modal')"
+                            class="btn-secondary btn-cancel btn-submit">Отмена</button>
+                        <button type="submit" class="btn-primary btn-submit">Добавить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-overlay" id="category-edit-modal">
+            <div class="modal">
+                <span class="close-btn" onclick="Modal.close('category-edit-modal')">&times;</span>
+                <h2>Редактирование категории</h2>
+                <form id="category-edit-form" class="modal-form">
+                    <input type="text" class="none" name="id">
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input type="text" class="form-control" name="name" id="name" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="Modal.close('category-modal')"
+                            class="btn-secondary btn-cancel btn-submit">Отмена</button>
+                        <button type="submit" class="btn-primary btn-save btn-submit">Сохранить</button>
                     </div>
                 </form>
             </div>

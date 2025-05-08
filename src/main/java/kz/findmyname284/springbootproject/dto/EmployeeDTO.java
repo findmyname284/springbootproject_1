@@ -5,9 +5,9 @@ import java.math.BigDecimal;
 import jakarta.validation.constraints.NotBlank;
 
 public record EmployeeDTO(
-    @NotBlank Long userId,
-    @NotBlank BigDecimal salary,
-    @NotBlank String iin
+    @NotBlank(message = "Требуется идентификатор пользователя") Long userId,
+    @NotBlank(message = "Требуется зарплата") BigDecimal salary,
+    @NotBlank(message = "ИИН требуется") String iin
 ) {
     
 }

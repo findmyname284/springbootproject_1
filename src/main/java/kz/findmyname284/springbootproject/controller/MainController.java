@@ -22,6 +22,7 @@ import kz.findmyname284.springbootproject.model.Employee;
 import kz.findmyname284.springbootproject.model.Order;
 import kz.findmyname284.springbootproject.model.Supplier;
 import kz.findmyname284.springbootproject.model.User;
+import kz.findmyname284.springbootproject.model.Warehouse;
 import kz.findmyname284.springbootproject.model.WarehouseProduct;
 import kz.findmyname284.springbootproject.repository.CatalogProductRepository;
 import kz.findmyname284.springbootproject.repository.WarehouseProductRepository;
@@ -29,6 +30,7 @@ import kz.findmyname284.springbootproject.service.EmployeeService;
 import kz.findmyname284.springbootproject.service.OrderService;
 import kz.findmyname284.springbootproject.service.SupplierService;
 import kz.findmyname284.springbootproject.service.UserService;
+import kz.findmyname284.springbootproject.service.WarehouseService;
 import kz.findmyname284.springbootproject.utils.Authorization;
 import lombok.RequiredArgsConstructor;
 
@@ -41,21 +43,16 @@ public class MainController {
 	private final EmployeeService employeeService;
 	private final WarehouseProductRepository wProductRepository;
 	private final CatalogProductRepository cProductRepository;
+	private final WarehouseService warehouseService;
 
 	@GetMapping("/")
-	public String root(Model model) {
-		model.addAttribute("title", "Main Page");
-		return "index";
-	}
-
-	@GetMapping("home")
-	public String hello(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+	public String home(Model model, @AuthenticationPrincipal UserDetails userDetails) {
 		if (userDetails != null) {
 			User user = userService.findByUsername(userDetails.getUsername());
 			model.addAttribute("user", user);
 			model.addAttribute("orders", orderService.findByUser(user).size());
 		}
-		model.addAttribute("title", "Home Page");
+		model.addAttribute("title", "Домашняя страница");
 		model.addAttribute("activePage", "home");
 		return "home";
 	}
@@ -65,13 +62,13 @@ public class MainController {
 		if (userDetails != null) {
 			return "redirect:/home";
 		}
-		model.addAttribute("title", "Auth Page");
+		model.addAttribute("title", "Страница аутентификации");
 		return "auth";
 	}
 
 	@GetMapping("cart")
 	public String cart(Model model) {
-		model.addAttribute("title", "Cart Page");
+		model.addAttribute("title", "Страница корзины");
 		return "cart/view";
 	}
 
@@ -83,13 +80,13 @@ public class MainController {
 			User user = Authorization.getAuthorizationUser(userService, userDetails);
 			Order order = orderService.findById(orderId);
 
-			if (!order.getUser().getId().equals(user.getId())) {
-				redirectAttributes.addFlashAttribute("error", "Access denied");
+			if (!order.getUser().getId().equals(user.getId()) && !user.getRole().equals(UserRole.ADMIN)) {
+				redirectAttributes.addFlashAttribute("error", "Доступ запрещен");
 				return "redirect:/cart/checkout/status/" + order.getId();
 			}
 
 			if (order.getItems().isEmpty()) {
-				throw new IllegalArgumentException("Order is empty");
+				throw new IllegalArgumentException("Заказ пуст");
 			}
 
 			if (order.getStatus() != OrderStatus.PENDING) {
@@ -110,8 +107,8 @@ public class MainController {
 			redirectAttributes.addFlashAttribute("error", e.getMessage());
 			return "redirect:/cart";
 		} catch (Exception e) {
-			redirectAttributes.addFlashAttribute("error", "Access denied");
-			return "redirect:/login";
+			redirectAttributes.addFlashAttribute("error", "Доступ запрещен");
+			return "redirect:/cart";
 		}
 
 		return "cart/checkout";
@@ -124,19 +121,19 @@ public class MainController {
 			Order order = orderService.findById(orderId);
 
 			if (order == null) {
-				redirectAttributes.addFlashAttribute("error", "Order not found");
+				redirectAttributes.addFlashAttribute("error", "Заказ не найден");
 				return "redirect:/cart";
 			}
 
 			model.addAttribute("order", order);
-			model.addAttribute("title", "Order #" + order.getId());
+			model.addAttribute("title", "Заказ #" + order.getId());
 			BigDecimal total = order.getItems().stream()
 					.map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
 					.reduce(BigDecimal.ZERO, BigDecimal::add);
 			model.addAttribute("totalAmount", total.toString());
 		} catch (Exception e) {
 			redirectAttributes.addFlashAttribute("error", e.getMessage());
-			return "redirect:/login";
+			return "redirect:/cart";
 		}
 
 		return "cart/status";
@@ -155,6 +152,12 @@ public class MainController {
 		}
 	}
 
+	@GetMapping("/test")
+	public String test(Model model) {
+		return "test";
+	}
+	
+
 	@GetMapping("/dashboard")
 	public String dashboard(Model model,
 			@AuthenticationPrincipal UserDetails userDetails) {
@@ -170,9 +173,11 @@ public class MainController {
 
 			if (OptionalEmployee.isPresent()) {
 				Employee employee = OptionalEmployee.get();
+				Warehouse warehouse = warehouseService.findByEmployee(employee);
 
 				model.addAttribute("employee", employee);
 				model.addAttribute("products", products);
+				model.addAttribute("warehouse", warehouse);
 			} else if (supplier != null) {
 				model.addAttribute("supplier", supplier);
 				model.addAttribute("supplierProducts", supplierProducts);
@@ -183,7 +188,7 @@ public class MainController {
 			}
 
 			model.addAttribute("user", user);
-			model.addAttribute("title", "Dashboard Page");
+			model.addAttribute("title", "Страница панели инструментов");
 			model.addAttribute("activeTab", "profile");
 
 			BigDecimal totalAmount = orders.stream()
@@ -203,7 +208,7 @@ public class MainController {
 
 	@GetMapping("catalog")
 	public String catalog(Model model) {
-		model.addAttribute("title", "Catalog Page");
+		model.addAttribute("title", "Страница каталога");
 
 		List<CatalogProduct> products = cProductRepository.findAll();
 
@@ -218,7 +223,7 @@ public class MainController {
 			User user = Authorization.getAuthorizationUser(userService, userDetails);
 			List<Order> orders = orderService.findByUser(user);
 			model.addAttribute("returns", orders);
-			model.addAttribute("title", "Returns Page");
+			model.addAttribute("title", "Страница возврата");
 			model.addAttribute("activePage", "returns");
 		} catch (AuthorizationException e) {
 			return "redirect:/auth";
@@ -236,13 +241,13 @@ public class MainController {
 			Order order = orderService.findById(returnId);
 			if (order.getUser().equals(user)) {
 				model.addAttribute("return", order);
-				model.addAttribute("title", "Return Page");
+				model.addAttribute("title", "Страница возврата");
 				model.addAttribute("id", returnId);
 				return "cart/return";
 			}
 			return "cart/auth";
 		} catch (Exception e) {
-			redirectAttributes.addFlashAttribute("error", "Return request not found");
+			redirectAttributes.addFlashAttribute("error", "Запрос на возврат не найден");
 			return "redirect:/returns";
 		}
 	}
@@ -252,7 +257,7 @@ public class MainController {
 		try {
 			User user = Authorization.getAuthorizationUser(userService, userDetails);
 			model.addAttribute("user", user);
-			model.addAttribute("title", "Balance Page");
+			model.addAttribute("title", "Страница баланса");
 			model.addAttribute("activePage", "balance");
 			return "profile/balance";
 		} catch (AuthorizationException e) {

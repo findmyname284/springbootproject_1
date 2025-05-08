@@ -114,7 +114,49 @@
         </div>
     </section>
 
+    <section th:fragment="orders" class="orders-section none" th:id="orders">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> Заказы</h2>
+        </div>
 
+        <div class="orders-list">
+            <div th:each="order : ${orders}" class="order-card">
+                <div class="order-header">
+                    <div class="order-meta">
+                        <a th:href="@{/cart/checkout/status/{id}(id=${order.id})}" class="order-id"
+                            th:text="'Заказ #' + ${order.id}"></a>
+                        <span class="order-date"
+                            th:text="${#temporals.format(order.orderDate, 'dd MMM yyyy HH:mm')}"></span>
+                    </div>
+                    <div class="order-status" th:classappend="${order.status}">
+                        <span th:text="${order.status}"></span>
+                    </div>
+                </div>
+                <div class="order-details">
+                    <div class="order-items">
+                        <div th:each="item : ${order.items}" class="order-item">
+                            <img th:src="${item.product.baseProduct.image}" class="item-image">
+                            <div class="item-info">
+                                <h4 th:text="${item.product.baseProduct.name}"></h4>
+                                <p
+                                    th:text="${item.quantity} + ' × ' + ${#numbers.formatDecimal(item.price == null ? 0 : item.price, 0, 'COMMA', 2, 'POINT')} + ' ₸'">
+                                </p>
+                            </div>
+                            <strong th:with="totalItemPrice=${item.quantity * item.price}"
+                                th:text="${#numbers.formatDecimal(totalItemPrice == null ? 0 : totalItemPrice, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></strong>
+                        </div>
+                    </div>
+                    <div class="order-total">
+                        <span>Итого: </span><strong
+                            th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 2, 'POINT')} + ' ₸'"></strong>
+                    </div>
+                    <button class="btn-primary btn-submit"
+                        th:if="${order.status == T(kz.findmyname284.springbootproject.enums.OrderStatus).PENDING}"
+                        th:onclick="|location.href='@{/cart/checkout?orderId={id}(id=${order.id})}'|">Купить</button>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>

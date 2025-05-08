@@ -15,4 +15,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByStatus(OrderStatus status);
 
     List<Order> findByStatusAndStatusUpdateTimeBefore(OrderStatus sending, LocalDateTime minusMinutes);
+
+    List<Order> findByStatusAndOrderDateBefore(OrderStatus sending, LocalDateTime orderDate);
 }

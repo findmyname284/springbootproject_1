@@ -7,13 +7,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record RegisterDTO(
-                @NotBlank String name,
-                @NotBlank String surname,
-                @NotBlank String username,
-                @Email @NotBlank String email,
-                @NotBlank String phone,
-                @Size(min = 8) String password,
-                @NotBlank String address,
+                @NotBlank(message = "Имя обязательно") String name,
+                @NotBlank(message = "Фамилия обязательна") String surname,
+                @NotBlank(message = "Логин обязателен") String username,
+                @Email @NotBlank(message = "Email обязателен") String email,
+                @NotBlank(message = "Телефон обязателен") String phone,
+                @Size(min = 6, message = "Длина пароля должна быть не менее 6 символов") String password,
+                @NotBlank(message = "Адрес обязателен") String address,
                 String role,
                 BigDecimal balance) {
         public RegisterDTO setRole(String role) {

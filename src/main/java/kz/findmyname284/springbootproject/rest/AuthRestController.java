@@ -39,7 +39,7 @@ public class AuthRestController {
     public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO dto) {
         try {
             userService.register(dto.setRole("USER").setBalance(BigDecimal.ZERO));
-            return ResponseEntity.ok().body(Collections.singletonMap("message", "Registration successful"));
+            return ResponseEntity.ok().body(Collections.singletonMap("message", "Регистрация прошла успешно"));
         } catch (AlreadyExistsException e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }

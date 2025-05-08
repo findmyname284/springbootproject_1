@@ -9,11 +9,14 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 public record UpdateUserRequest(
-        @NotBlank @Size(min = 3, max = 20) String username,
-
-        @NotBlank @Email String email,
-
-        @PositiveOrZero BigDecimal balance,
-
-        @NotNull String role) {
+                @NotBlank(message = "Имя обязательно") String name,
+                @NotBlank(message = "Фамилия обязательна") String surname,
+                @NotBlank(message = "Логин обязателен")
+                @Size(min = 3, max = 20, message = "Длина логина от 3 до 20 символов") String username,
+                @NotBlank(message = "Телефон обязателен") String phone,
+                @NotBlank(message = "Email обязателен")
+                @Email(message = "Email имеет неправильный формат") String email,
+                @NotBlank(message = "Адрес обязателен") String address,
+                @PositiveOrZero(message = "Баланс не может быть отрицательным") BigDecimal balance,
+                @NotNull(message = "Роль обязательна") String role) {
 }

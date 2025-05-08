@@ -18,6 +18,9 @@
                     <a href="#users" id="users-nav" class="nav-item">
                         <i class="fas fa-user"></i> Пользователи
                     </a>
+                    <a href="#orders" id="orders-nav" class="nav-item">
+                        <i class="fas fa-history"></i> Заказы
+                    </a>
                     <div th:replace="manager/fragments :: nav"></div>
                 </nav>
             </aside>
@@ -25,9 +28,13 @@
             <main class="main-content">
                 <section th:replace="admin/fragments :: users"></section>
 
+                <section th:replace="admin/fragments :: orders"></section>
+
                 <section th:replace="manager/fragments :: employees"></section>
 
                 <section th:replace="manager/fragments :: warehouses"></section>
+
+                <section th:replace="manager/fragments :: category"></section>
 
                 <section class="warehouse-products" th:id="warehouse-products">
                     <div th:replace="employee/fragments :: section-header"></div>
@@ -124,6 +131,10 @@
                     '#warehouse-products': () => {
                         currentPanel = new ManagerPanel();
                         document.querySelector('#warehouse-products').classList.remove('none');
+                    },
+                    '#category': () => {
+                        currentPanel = new ManagerPanel();
+                        document.querySelector('#category').classList.remove('none');
                     }
                 };
 
@@ -173,20 +184,27 @@
                     ManagerPanel.handleEmployeeUpdate(e);
                 });
 
+                document.getElementById('category-form').addEventListener('submit', e => {
+                    e.preventDefault();
+                    ManagerPanel.addCategory(e);
+                });
+
+                document.getElementById('category-edit-form').addEventListener('submit', e => {
+                    e.preventDefault();
+                    ManagerPanel.updateCategory();
+                })
+
                 document.querySelectorAll('.nav-item').forEach(item => {
                     item.addEventListener('click', function (e) {
                         const hash = this.getAttribute('href');
                         window.location.hash = hash;
 
-                        // Скрыть все секции
                         document.querySelectorAll('section').forEach(section => {
                             section.classList.add('none');
                         });
 
-                        // Показать активную секцию
                         document.querySelector(hash).classList.remove('none');
 
-                        // Инициализация соответствующей панели
                         if (navItems[hash]) navItems[hash]();
                     });
                 });

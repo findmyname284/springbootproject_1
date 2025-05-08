@@ -68,13 +68,13 @@
                                         th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT') + ' ₸'}">
                                     </p>
                                 </div>
-                                <span class="product-stock" th:text="${'Stock: ' + product.quantity}"></span>
+                                <span class="product-stock" th:text="${'Запас: ' + product.quantity}"></span>
                             </div>
                         </div>
                     </li>
                 </ul>
                 <ul th:if="${supplierProducts == null or supplierProducts.empty}">
-                    <h3 class="product-title">No products</h3>
+                    <h3 class="product-title">Нет продуктов</h3>
                 </ul>
                 <div th:replace="supplier/profile :: productEdit"></div>
             </div>
@@ -91,7 +91,7 @@
                                     <div class="product-badges" th:if="${product.created != null}">
                                         <span class="badge new"
                                             th:if="${product.created != null and T(java.time.temporal.ChronoUnit).DAYS.between(product.created.toLocalDate(), T(java.time.LocalDate).now()) < 7}">
-                                            NEW
+                                            НОВЫЙ
                                         </span>
                                     </div>
                                     <img class="product-image"
@@ -132,7 +132,7 @@
                                         </div>
                                     </div>
 
-                                    <button class="btn btn-buy" th:attr="data-id=${product.id}"
+                                    <button class="btn btn-buy" th:disabled="${product.quantity == null or product.quantity <= 0}" th:attr="data-id=${product.id}"
                                         th:onclick="'buyProduct('+${product.id}+')'">
                                         <i class="fas fa-shopping-cart"></i>
                                         Купить
@@ -317,50 +317,6 @@
                     font-size: 0.9rem;
                 }
 
-                .description-wrapper {
-                    position: relative;
-                    margin: 0.5rem 0;
-                }
-
-                .description-icon {
-                    color: #007bff;
-                    font-size: 1rem;
-                    cursor: help;
-                    transition: opacity 0.2s;
-                }
-
-                .product-description {
-                    position: absolute;
-                    bottom: 100%;
-                    left: 0;
-                    width: 100%;
-                    background: rgba(255, 255, 255, 0.95);
-                    padding: 1rem;
-                    border-radius: 6px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                    opacity: 0;
-                    transform: translateY(10px);
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    pointer-events: none;
-                    z-index: 1;
-                }
-
-                .description-wrapper:hover .product-description {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-
-                @media (hover: none) {
-                    .product-description {
-                        position: static;
-                        opacity: 1;
-                        box-shadow: none;
-                        background: transparent;
-                        padding: 0.5rem 0;
-                        transform: none;
-                    }
-                }
-
                 .product-details {
                     padding: 1rem;
                 }
@@ -423,19 +379,13 @@
                     gap: 0.5rem;
                 }
 
+                .btn-buy[disabled] {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+
                 .btn-buy:hover {
                     background: #0056b3;
-                }
-
-                .empty-state {
-                    text-align: center;
-                    padding: 3rem;
-                    color: #6c757d;
-                }
-
-                .empty-state i {
-                    font-size: 3rem;
-                    margin-bottom: 1rem;
                 }
 
                 @media (max-width: 480px) {

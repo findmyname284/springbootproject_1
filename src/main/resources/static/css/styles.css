@@ -101,6 +101,27 @@ main {
     fill: var(--primary-color);
 }
 
+.category-card {
+    background: #fff;
+    width: 250px;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
 .dropdown-menu {
     position: absolute;
     right: 0;
@@ -892,6 +913,50 @@ main {
     gap: 2rem;
     padding: 0;
     list-style: none;
+}
+
+.description-wrapper {
+    position: relative;
+    margin: 0.5rem 0;
+}
+
+.description-icon {
+    color: #007bff;
+    font-size: 1rem;
+    cursor: help;
+    transition: opacity 0.2s;
+}
+
+.product-description {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 1001;
+}
+
+.description-wrapper:hover .product-description {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (hover: none) {
+    .product-description {
+        position: static;
+        opacity: 1;
+        box-shadow: none;
+        background: transparent;
+        padding: 0.5rem 0;
+        transform: none;
+    }
 }
 
 /* Product Card */
