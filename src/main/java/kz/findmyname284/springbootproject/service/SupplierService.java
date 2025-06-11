@@ -1,9 +1,13 @@
 package kz.findmyname284.springbootproject.service;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 
 import kz.findmyname284.springbootproject.dto.SupplierDTO;
 import kz.findmyname284.springbootproject.exception.AlreadyExistsException;
+import kz.findmyname284.springbootproject.exception.ResourceNotFoundException;
 import kz.findmyname284.springbootproject.model.Supplier;
 import kz.findmyname284.springbootproject.model.User;
 import kz.findmyname284.springbootproject.repository.SupplierRepository;
@@ -41,5 +45,32 @@ public class SupplierService {
 
     public Supplier findByUser(User user) {
         return supplierRepository.findByUser(user);
+    }
+
+    public List<Supplier> findAll() {
+        return supplierRepository.findAll();
+    }
+
+    public Supplier update(Long id, SupplierDTO supplierDto) throws ResourceNotFoundException {
+        try {
+            
+            Supplier supplier = supplierRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Поставщик не найден"));
+            supplier.setName(supplierDto.name());
+            supplier.setAddress(supplierDto.address());
+            supplier.setPhone(supplierDto.phone());
+            supplier.setEmail(supplierDto.email());
+            return supplierRepository.save(supplier);
+        } catch (Exception e) {
+            throw new ResourceNotFoundException(e.getMessage());
+        }
+    }
+
+    public Optional<Supplier> findById(Long id) {
+        return supplierRepository.findById(id);
+    }
+
+    public void deleteById(Long id) {
+        supplierRepository.deleteById(id);
     }
 }

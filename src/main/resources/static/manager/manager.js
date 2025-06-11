@@ -5,12 +5,16 @@ class ManagerPanel {
 
     async loadInitialData() {
         try {
-            const [warehouses, employees, categories] = await Promise.all([
+            const [clients, suppliers, warehouses, employees, categories] = await Promise.all([
+                API.get('/api/manager/clients'),
+                API.get('/api/manager/suppliers'),
                 API.get('/api/manager/warehouses'),
                 API.get('/api/manager/employees'),
                 API.get('/api/manager/categories')
             ]);
 
+            this.renderClients(clients);
+            this.renderSuppliers(suppliers);
             this.renderWarehouses(warehouses);
             this.populateWarehousesSelect(warehouses);
             this.renderEmployees(employees);
@@ -35,6 +39,35 @@ class ManagerPanel {
         select.innerHTML = employees.map(employee => `<option value="${employee.id}">${employee.user.surname + ' ' + employee.user.name}</option>`).join('');
     }
 
+    renderClients(clients) {
+        const container = document.getElementById('clients-list');
+        container.innerHTML = clients.map(client => `
+            <div class="user-card" onclick="ManagerPanel.openClientEditForm(${client.id})" data-client-id="${client.id}">
+                <h3>${client.surname} ${client.name}</h3>
+                <p>${client.email}</p>
+                <p>${client.phone}</p>
+                <p>${client.balance} ₸</p>
+                <p>${client.address}</p>
+            </div>
+        `).join('');
+    }
+
+    renderSuppliers(suppliers) {
+        const container = document.getElementById('suppliers-list');
+        container.innerHTML = suppliers.map(supplier => `
+            <div class="user-card" data-supplier-id="${supplier.id}">
+                <h3>${supplier.name}</h3>
+                <p>${supplier.email}</p>
+                <p>${supplier.phone}</p>
+                <p>${supplier.address}</p>
+                <div class="card-actions">
+                    <button class="btn-icon" onclick="ManagerPanel.openSupplierEditForm(${supplier.id})">✏️</button>
+                    <button class="btn-icon danger" onclick="ManagerPanel.deleteSupplier(${supplier.id})">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
     renderWarehouses(warehouses) {
         const container = document.getElementById('warehouses-list');
         if (warehouses.length === 0) {
@@ -52,6 +85,52 @@ class ManagerPanel {
                 </div>
             </div>
         `).join('');
+    }
+
+    static openSupplierEditForm(id) {
+        Modal.open('supplier-edit-modal');
+        document.body.style.overflow = 'hidden';
+        API.get(`/api/manager/suppliers/${id}`).then(supplier => {
+            const form = document.getElementById('supplier-edit-form');
+            form.querySelector('input[name="id"]').value = supplier.id || '';
+            form.querySelector('input[name="name"]').value = supplier.name || '';
+            form.querySelector('input[name="email"]').value = supplier.email || '';
+            form.querySelector('input[name="phone"]').value = supplier.phone || '';
+            form.querySelector('input[name="address"]').value = supplier.address || '';
+        });
+    }
+
+
+    static deleteSupplier(id) {
+        if (confirm('Вы действительно хотите удалить поставщика?')) {
+            API.delete(`/api/manager/suppliers/${id}`).then(data => {
+                if (data.error) {
+                    notification.className = 'error';
+                    showNotification(data.error);
+                    return;
+                }
+                Modal.close('supplier-edit-modal');
+                notification.className = 'success';
+                showNotification('Поставщик успешно удален');
+                window.location.reload();
+            });
+        }
+    }
+
+    static openClientEditForm(id) {
+        Modal.open('client-edit-modal');
+        document.body.style.overflow = 'hidden';
+        API.get(`/api/manager/clients/${id}`).then(client => {
+            const form = document.getElementById('client-edit-form');
+            form.querySelector('input[name="id"]').value = client.id || '';
+            form.querySelector('input[name="balance"]').value = client.balance || '';
+            form.querySelector('input[name="username"]').value = client.username || '';
+            form.querySelector('input[name="name"]').value = client.name || '';
+            form.querySelector('input[name="surname"]').value = client.surname || '';
+            form.querySelector('input[name="email"]').value = client.email || '';
+            form.querySelector('input[name="phone"]').value = client.phone || '';
+            form.querySelector('input[name="address"]').value = client.address || '';
+        });
     }
 
     static editWarehouse() {
@@ -181,6 +260,8 @@ class ManagerPanel {
         container.innerHTML = employees.map(employee => `
             <div class="user-card" data-employee-id="${employee.id}">
                 <h3>${employee.user.surname} ${employee.user.name}</h3>
+                <p>${employee.user.email} · ${employee.user.phone}</p>
+                <p>ИИН: ${employee.iin}</p>
                 <p>💼 ${employee.salary} ₸</p>
                 <p>📅 ${new Date(employee.hireDate).toLocaleDateString()}</p>
                 <div class="card-actions">

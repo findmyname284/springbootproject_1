@@ -20,7 +20,11 @@
             </aside>
 
             <main class="main-content">
+                <section th:replace="manager/fragments :: clients"></section>
+
                 <section th:replace="manager/fragments :: employees"></section>
+
+                <section th:replace="manager/fragments :: suppliers"></section>
 
                 <section th:replace="manager/fragments :: warehouses"></section>
 
@@ -105,6 +109,10 @@
                 });
 
                 const navItems = {
+                    '#clients': () => {
+                        currentPanel = new ManagerPanel();
+                        document.querySelector('#clients').classList.remove('none');
+                    },
                     '#employees': () => {
                         currentPanel = new ManagerPanel();
                         document.querySelector('#employees').classList.remove('none');
@@ -116,6 +124,10 @@
                     '#category': () => {
                         currentPanel = new ManagerPanel();
                         document.querySelector('#category').classList.remove('none');
+                    },
+                    '#warehouse-products': () => {
+                        currentPanel = new ManagerPanel();
+                        document.querySelector('#warehouse-products').classList.remove('none');
                     }
                 };
 

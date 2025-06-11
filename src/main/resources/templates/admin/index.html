@@ -28,9 +28,13 @@
             <main class="main-content">
                 <section th:replace="admin/fragments :: users"></section>
 
+                <section th:replace="manager/fragments :: clients"></section>
+
                 <section th:replace="admin/fragments :: orders"></section>
 
                 <section th:replace="manager/fragments :: employees"></section>
+
+                <section th:replace="manager/fragments :: suppliers"></section>
 
                 <section th:replace="manager/fragments :: warehouses"></section>
 
@@ -120,9 +124,21 @@
                         currentPanel = new AdminPanel();
                         document.querySelector('#users').classList.remove('none');
                     },
+                    '#orders': () => {
+                        currentPanel = new ManagerPanel();
+                        document.querySelector('#orders').classList.remove('none');
+                    },
+                    '#clients': () => {
+                        currentPanel = new ManagerPanel();
+                        document.querySelector('#clients').classList.remove('none');
+                    },
                     '#employees': () => {
                         currentPanel = new ManagerPanel();
                         document.querySelector('#employees').classList.remove('none');
+                    },
+                    '#suppliers': () => {                       
+                        currentPanel = new ManagerPanel();
+                        document.querySelector('#suppliers').classList.remove('none');
                     },
                     '#warehouses': () => {
                         currentPanel = new ManagerPanel();

@@ -31,7 +31,8 @@ class AdminPanel {
             <div class="user-card" data-user-id="${user.id}">
                 <h3>${user.surname} ${user.name}</h3>
                 <p>@${user.username}</p>
-                <p>${user.role} · ${user.email}</p>
+                <p>${user.role} · ${user.email} · ${user.phone}</p>
+                <p>${user.balance} ₸</p>
                 <div class="card-actions">
                     <button class="btn-icon" onclick="AdminPanel.openEditForm(${user.id})">✏️</button>
                     <button class="btn-icon danger" onclick="AdminPanel.deleteUser(${user.id})">🗑️</button>

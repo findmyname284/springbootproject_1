@@ -24,18 +24,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.persistence.EntityNotFoundException;
 import kz.findmyname284.springbootproject.dto.EmployeeDTO;
+import kz.findmyname284.springbootproject.dto.SupplierDTO;
 import kz.findmyname284.springbootproject.enums.UserRole;
 import kz.findmyname284.springbootproject.exception.AuthorizationException;
 import kz.findmyname284.springbootproject.exception.ResourceNotFoundException;
 import kz.findmyname284.springbootproject.model.Category;
 import kz.findmyname284.springbootproject.model.Employee;
 import kz.findmyname284.springbootproject.model.SalaryHistory;
+import kz.findmyname284.springbootproject.model.Supplier;
 import kz.findmyname284.springbootproject.model.User;
 import kz.findmyname284.springbootproject.model.Warehouse;
 import kz.findmyname284.springbootproject.repository.CategoryRepository;
 import kz.findmyname284.springbootproject.repository.SalaryHistoryRepository;
 import kz.findmyname284.springbootproject.service.EmployeeService;
 import kz.findmyname284.springbootproject.service.SalaryCalculationResult;
+import kz.findmyname284.springbootproject.service.SupplierService;
 import kz.findmyname284.springbootproject.service.UserService;
 import kz.findmyname284.springbootproject.service.WarehouseService;
 import kz.findmyname284.springbootproject.utils.Authorization;
@@ -48,8 +51,19 @@ public class ManagerRestController {
     private final UserService userService;
     private final WarehouseService warehouseService;
     private final EmployeeService employeeService;
+    private final SupplierService supplierService;
     private final CategoryRepository categoryRepository;
     private final SalaryHistoryRepository salaryHistoryRepository;
+
+    @GetMapping("clients")
+    public ResponseEntity<?> getClients(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Authorization.checkAuthorization(userService, userDetails, UserRole.MANAGER, UserRole.ADMIN);
+            return ResponseEntity.ok(userService.findByRole(UserRole.USER));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
 
     @GetMapping("warehouses")
     public ResponseEntity<?> getWarehouses(@AuthenticationPrincipal UserDetails userDetails) {
@@ -399,7 +413,7 @@ public class ManagerRestController {
     @GetMapping("categories")
     public ResponseEntity<?> getCategories(@AuthenticationPrincipal UserDetails userDetails) {
         try {
-            Authorization.checkAuthorization(userService, userDetails, UserRole.MANAGER, UserRole.ADMIN);
+            Authorization.checkAuthorization(userService, userDetails, UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.ADMIN);
             return ResponseEntity.ok(categoryRepository.findAll());
         } catch (AuthorizationException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -410,7 +424,7 @@ public class ManagerRestController {
     public ResponseEntity<?> getCategoryById(@AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id) {
         try {
-            Authorization.checkAuthorization(userService, userDetails, UserRole.MANAGER, UserRole.ADMIN);
+            Authorization.checkAuthorization(userService, userDetails, UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.ADMIN);
             return ResponseEntity.ok(categoryRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Категория не найдена")));
         } catch (AuthorizationException e) {
@@ -469,6 +483,67 @@ public class ManagerRestController {
             categoryRepository.deleteById(id);
             return ResponseEntity.ok().body(
                     Collections.singletonMap("success", "Категория успешно удалена"));
+        } catch (AuthorizationException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @GetMapping("/suppliers")
+    public ResponseEntity<?> getAllSuppliers(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Authorization.checkAuthorization(userService, userDetails, UserRole.MANAGER, UserRole.ADMIN);
+            return ResponseEntity.ok(supplierService.findAll());
+        } catch (AuthorizationException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @GetMapping("/suppliers/{id}")
+    public ResponseEntity<?> getSupplierById(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Authorization.checkAuthorization(userService, userDetails, UserRole.MANAGER, UserRole.ADMIN);
+            Supplier supplier = supplierService.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Поставщик не найден"));
+            return ResponseEntity.ok(supplier);
+        } catch (AuthorizationException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/suppliers/{id}")
+    public ResponseEntity<?> updateSupplier(@PathVariable Long id, @RequestBody SupplierDTO supplierDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Authorization.checkAuthorization(userService, userDetails, UserRole.MANAGER, UserRole.ADMIN);
+            Supplier supplier = supplierService.update(id, supplierDto);
+            return ResponseEntity.ok(supplier);
+        } catch (AuthorizationException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/suppliers/{id}")
+    public ResponseEntity<?> deleteSupplier(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Authorization.checkAuthorization(userService, userDetails, UserRole.MANAGER, UserRole.ADMIN);
+            supplierService.deleteById(id);
+            return ResponseEntity.ok(Collections.singletonMap("success", "Поставщик успешно удален"));
+        } catch (AuthorizationException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    
+    @GetMapping("/clients/{id}")
+    public ResponseEntity<?> getClientById(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Authorization.checkAuthorization(userService, userDetails, UserRole.MANAGER, UserRole.ADMIN);
+            User client = userService.getById(id);
+            return ResponseEntity.ok(client);
         } catch (AuthorizationException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

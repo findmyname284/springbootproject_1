@@ -29,7 +29,7 @@
                             <span class="product-price"
                                 th:text="${product.basePrice == null ? 'нет цены' : #numbers.formatDecimal(product.basePrice, 0, 'COMMA', 2, 'POINT') + ' ₸'}"></span>
                             <span class="product-stock"
-                                th:text="${'Stock: ' + (product.quantity == null ? 0 : product.quantity) + ' шт.'}"></span>
+                                th:text="${'Запас: ' + (product.quantity == null ? 0 : product.quantity) + ' шт.'}"></span>
                         </div>
                     </div>
                 </li>
